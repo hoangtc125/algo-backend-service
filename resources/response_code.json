@@ -1,0 +1,20 @@
+{
+    "success": {
+        "code": 200,
+        "message": "Success"
+    },
+    "error": {
+        "system_error": {
+            "code": 1000,
+            "message": "Lỗi hệ thống"
+        },
+        "unauthenticated": {
+            "code": 1001,
+            "message": "unauthenticated"
+        },
+        "mail_invalid": {
+            "code": 4000,
+            "message": "Email không hợp lệ"
+        }
+    }
+}
