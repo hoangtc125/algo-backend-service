@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  algo-mongodb:
+    image: mongo:4.4.15
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: 125
+    ports:
+      - 127.0.0.1:27017:27017
+    volumes:
+      - ./mongodb:/data/db

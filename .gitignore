@@ -162,3 +162,4 @@ cython_debug/
 .venv
 .env
 resources/algo-firebase.json
+docker/mongodb

@@ -6,7 +6,7 @@ from typing import Optional, TypeVar
 from app.core.config import project_config
 
 
-f_json = open(project_config.RESPONSE_CODE_DIR, encoding="utf8")
+f_json = open(project_config.RESPONSE_CODE_DIR, encoding="utf-8")
 response_code = json.load(f_json)
 T = TypeVar("T")
 
@@ -25,9 +25,16 @@ class HttpResponse(BaseModel):
 
 
 class TokenPayload(BaseModel):
-    username: Optional[str] = None
+    email: Optional[str] = None
     role: Optional[str] = None
     expire_time: Optional[int] = None
+
+
+class ConfirmationToken(BaseModel):
+    token_type: str = "Bearer"
+    token: str
+    created_at: int
+    expires_at: int
 
 
 def custom_response(status_code, message: str, data: T) -> HttpResponse:

@@ -8,8 +8,9 @@ from fastapi.encoders import jsonable_encoder
 from app.core.config import project_config
 from app.core.filter import authentication, authorization
 from app.core.exception import CustomHTTPException
-from app.router.detect_router import router as detect_router
-from app.router.account_router import router as account_router
+from app.core.socket import socket_connection
+from app.router.detect import router as detect_router
+from app.router.account import router as account_router
 
 
 app = FastAPI()
@@ -34,24 +35,33 @@ async def uvicorn_exception_handler(request: Request, exc: CustomHTTPException):
 @app.middleware("http")
 async def add_request_middleware(request: Request, call_next):
     start_time = time.time()
-    if request.method != "OPTIONS":
-        try:
-            request_user = authentication(request)
-        except CustomHTTPException as e:
-            return JSONResponse(
-                status_code=e.status_code,
-                headers={
-                    "access-control-allow-origin": "*",
-                    "X-Process-Time": str(time.time() - start_time),
-                },
-                content=jsonable_encoder(
-                    {"status_code": e.error_code, "msg": e.error_message}
-                ),
-            )
+    # if request.method != "OPTIONS":
+    #     try:
+    #         request_user = authentication(request)
+    #     except CustomHTTPException as e:
+    #         return JSONResponse(
+    #             status_code=e.status_code,
+    #             headers={
+    #                 "access-control-allow-origin": "*",
+    #                 "X-Process-Time": str(time.time() - start_time),
+    #             },
+    #             content=jsonable_encoder(
+    #                 {"status_code": e.error_code, "msg": e.error_message}
+    #             ),
+    #         )
     response = await call_next(request)
     process_time = time.time() - start_time
     response.headers["X-Process-Time"] = str(process_time)
     return response
+
+app.mount("/ws", socket_connection())
+
+@app.post("/test_socket")
+async def test_socket(event_name, data: str):
+    return await socket_connection.send_data(
+        channel=event_name,
+        data=data
+    )
 
 
 app.include_router(detect_router)
