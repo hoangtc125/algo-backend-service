@@ -15,6 +15,10 @@
         "mail_invalid": {
             "code": 4000,
             "message": "Email không hợp lệ"
+        },
+        "account_already_exist": {
+            "code": 5000,
+            "message": "Email đã được sử dụng"
         }
     }
 }

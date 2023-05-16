@@ -1,11 +1,13 @@
+import traceback
+from  motor.motor_asyncio import AsyncIOMotorClient
 from typing import TypeVar, Dict
-from pymongo import MongoClient
 from uuid import uuid4
 
-from app.util.model import get_dict
+from app.util.model import get_dict, get_response_model
 
 
 T = TypeVar("T")
+
 
 class MongoDBConnection:
 
@@ -13,8 +15,8 @@ class MongoDBConnection:
     connection = None
 
     def __init__(self, url):
-        print(f"Connect to MongoDB at {url}")
-        self.client = MongoClient(url)
+        print(f"Connect to MongoDB")
+        self.client = AsyncIOMotorClient(url)
 
     def get_connection(self, database):
         return self.client[database]
@@ -30,23 +32,40 @@ class MongoDBConnection:
 
 
 class BaseRepository:
-    def __init__(self, connection, collection_name):
-        self.collection = connection[collection_name]
-        self.model = collection_name
+    def __init__(self, connection, model):
+        self.collection = connection[model.__name__.lower()]
+        self.model = model
 
-    async def get_one(self, field: str, value: str):
-        return await self.collection.find_one({field: value})
+    async def get_one(self, query):
+        try:
+            res = await self.collection.find_one(query)
+            if not res:
+                return None
+        except:
+            traceback.print_exc()
+            return None
+        return (str(res["_id"]), self.model(**res["_source"]))
 
     async def get_one_by_id(self, value: str):
-        return await self.get_one("_id", value)
+        try:
+            res = await self.collection.find_one({"_id": value})
+            if not res:
+                return None
+        except:
+            traceback.print_exc()
+            return None
+        return (str(res["_id"]), self.model(**res["_source"]))
 
     async def get_all(self, page_size = 20, page_number = None, query = {}):
         if not page_number:
             cursor = self.collection.find(query)
         else:
             skip = page_size * (page_number - 1)
-            cursor = self.collection.find().skip(skip).limit(page_size)
-        return [document async for document in cursor]
+            cursor = self.collection.find(query).skip(skip).limit(page_size)
+        res = {}
+        async for document in cursor:
+            res[document["_id"]] = get_response_model(document, self.model)
+        return res
 
     async def insert(self, obj: T, custom_id=None):
         if obj.__class__ != self.model:
@@ -54,14 +73,14 @@ class BaseRepository:
                 f"{obj.__class__} can not be inserted into {self.model.__class__}"
             )
         _id = custom_id if custom_id else uuid4()
-        result = await self.collection.insert_one({"_id": _id, **get_dict(obj)})
+        result = await self.collection.insert_one({"_id": _id, "_source": get_dict(obj)})
         return str(result.inserted_id)
 
-    async def update(self, query: Dict, update_data: Dict):
-        return await self.collection.update_one(query, {"$set": update_data})
+    async def update(self, query: Dict, obj: Dict):
+        return await self.collection.update_one(query, {"$set": obj})
 
-    async def update_one(self, id, update_data: Dict):
-        return await self.collection.update_one({"_id": id}, {"$set": update_data})
+    async def update_by_id(self, id, obj: Dict):
+        return await self.collection.update_one({"_id": id}, {"$set": obj})
 
     async def delete(self, query: Dict):
         return await self.collection.delete_one(query)
@@ -69,9 +88,9 @@ class BaseRepository:
 
 def get_repo(model: T, url: str, db: str, new_connection: bool = False) -> BaseRepository:
     connection = MongoDBConnection.mongodb(url, db)
-    collection_name = model.__name__
+    collection_name = model.__name__.lower()
     if new_connection:
-        return BaseRepository(connection, collection_name)
+        return BaseRepository(connection, model)
     if MongoDBConnection.repositories.get(collection_name, None) is None:
-        MongoDBConnection.repositories[collection_name] = BaseRepository(connection, collection_name)
+        MongoDBConnection.repositories[collection_name] = BaseRepository(connection, model)
     return MongoDBConnection.repositories[collection_name]

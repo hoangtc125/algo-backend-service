@@ -1,3 +1,4 @@
+from fastapi import Request
 from jose import JWTError, jwt
 
 from app.core.exception import CustomHTTPException
@@ -46,3 +47,17 @@ def get_token_payload(token: str):
     except JWTError:
         raise CustomHTTPException(error_type="unauthorized")
     return token_payload
+
+
+def get_actor_from_request(request: Request):
+    try:
+        return request._headers["x-request-user"]
+    except:
+        return None
+
+
+def get_role_from_request(request: Request):
+    try:
+        return request._headers["x-request-role"]
+    except:
+        return None

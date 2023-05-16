@@ -5,6 +5,10 @@ class Role:
     @staticmethod
     def get_all():
         return [Role.ADMIN, Role.USER]
+    
+class Provider:
+    ALGO = "ALGO"
+    FIREBASE = "FIREBASE"
 
 
 class DateTime:

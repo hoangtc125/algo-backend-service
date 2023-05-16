@@ -15,7 +15,7 @@ class ProjectConfig(BaseSettings):
     SECRET_KEY = getenv("SECRET_KEY")
     SECURITY_ALGORITHM = getenv("SECURITY_ALGORITHM")
     MONGO_URL = getenv("MONGO_URL")
-    MONGO_DB = "ALGO"
+    MONGO_DB = "algo"
     ALGO_PORT = int(getenv("ALGO_PORT", 8001))
     MAIL_USER = str(getenv("MAIL_USER", ""))
     MAIL_PASS = str(getenv("MAIL_PASS", ""))
