@@ -54,3 +54,14 @@ def get_permissions(role: str):
         if accepted_role == ALLOW_ALL or role in accepted_role:
             lst_permissions.append(api)
     return lst_permissions
+
+if __name__ == "__main__":
+    first_elements = set()  # Tạo một set để lưu trữ các phần tử duy nhất
+
+    for path in API_PERMISSION:
+        elements = path.split("/")  # Tách chuỗi theo dấu "/"
+        first_element = elements[1]  # Lấy phần tử đầu tiên sau dấu "/"
+        first_elements.add(first_element)  # Thêm phần tử vào set
+
+    result = list(first_elements)
+    print(result)
