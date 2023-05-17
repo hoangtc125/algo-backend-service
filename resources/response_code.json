@@ -10,7 +10,11 @@
         },
         "unauthenticated": {
             "code": 1001,
-            "message": "unauthenticated"
+            "message": "Xác thực thất bại"
+        },
+        "unauthorized": {
+            "code": 1002,
+            "message": "Không có quyền truy cập"
         },
         "mail_invalid": {
             "code": 4000,
@@ -19,6 +23,14 @@
         "account_already_exist": {
             "code": 5000,
             "message": "Email đã được sử dụng"
+        },
+        "account_inactive": {
+            "code": 5001,
+            "message": "Tài khoản chưa được kích hoạt"
+        },
+        "account_not_exist": {
+            "code": 5000,
+            "message": "Tài khoản không tồn tại"
         }
     }
 }

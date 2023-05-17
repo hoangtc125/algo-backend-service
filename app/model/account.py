@@ -4,16 +4,17 @@ from pydantic import BaseModel
 from app.core.constant import Role, Provider
 from app.core.model import BaseAuditModel
 
+
 class BaseAccount(BaseModel):
     name: Optional[str] = None
     email: str
     photo_url: Optional[str] = None
     verify: Optional[dict] = None
     role: str = Role.USER
-    provider: str = Provider.ALGO
+    provider: str = Provider.SYSTEM
+
 
 class Account(BaseAccount, BaseAuditModel):
-    _id: str
     hashed_password: Optional[str] = None
     active: Optional[bool] = False
 

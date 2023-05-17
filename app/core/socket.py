@@ -1,3 +1,4 @@
+from typing import Any
 import socketio
 
 
@@ -6,7 +7,7 @@ class Socket:
         self.__sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*")
         self.__asgi = socketio.ASGIApp(self.__sio)
 
-    async def send_data(self, channel: str, data: dict):
+    async def send_data(self, data: Any, channel: str = "system"):
         await self.__sio.emit(channel, data)
         return
 

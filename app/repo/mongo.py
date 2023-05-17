@@ -72,15 +72,17 @@ class BaseRepository:
             raise TypeError(
                 f"{obj.__class__} can not be inserted into {self.model.__class__}"
             )
-        _id = custom_id if custom_id else uuid4()
+        _id = custom_id if custom_id else str(uuid4())
         result = await self.collection.insert_one({"_id": _id, "_source": get_dict(obj)})
         return str(result.inserted_id)
 
     async def update(self, query: Dict, obj: Dict):
-        return await self.collection.update_one(query, {"$set": obj})
+        await self.collection.update_one(query, {"$set": obj})
+        return id
 
     async def update_by_id(self, id, obj: Dict):
-        return await self.collection.update_one({"_id": id}, {"$set": obj})
+        await self.collection.update_one({"_id": id}, {"$set": obj})
+        return id
 
     async def delete(self, query: Dict):
         return await self.collection.delete_one(query)

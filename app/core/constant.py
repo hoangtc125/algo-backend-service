@@ -7,7 +7,7 @@ class Role:
         return [Role.ADMIN, Role.USER]
     
 class Provider:
-    ALGO = "ALGO"
+    SYSTEM = "SYSTEM"
     FIREBASE = "FIREBASE"
 
 

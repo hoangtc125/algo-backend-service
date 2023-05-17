@@ -100,5 +100,36 @@ def make_mail_content_card(card: Dict):
     )
 
 
+def make_mail_active_account(url):
+    return (
+        EmailContent()
+        .h4("Chào bạn,")
+        .p(
+            "Chúng tôi rất vui mừng thông báo rằng bạn đã đăng ký thành công tài khoản trên hệ thống của chúng tôi. Để hoàn tất quá trình đăng ký và kích hoạt tài khoản, bạn vui lòng thực hiện các bước sau:"
+        )
+        .ol(
+            [
+                "Truy cập vào đường dẫn để kích hoạt tài khoản của bạn",
+                "Sau khi nhấp vào liên kết kích hoạt, tài khoản của bạn sẽ được kích hoạt và bạn sẽ có thể đăng nhập vào hệ thống bằng thông tin đăng nhập đã đăng ký.",
+            ]
+        )
+        .p("Đường dẫn: ")
+        .a(url, "Kích hoạt tài khoản")
+        .p(
+            "Nếu bạn không thực hiện việc kích hoạt này, tài khoản của bạn sẽ không hoạt động và sẽ bị xóa sau một khoảng thời gian nhất định."
+        )
+        .p(
+            "Nếu bạn gặp bất kỳ vấn đề hoặc câu hỏi nào, vui lòng liên hệ với chúng tôi qua: "
+        )
+        .a("https://chinhphu.vn/", "Thông tin liên hệ")
+        .p(
+            "Cảm ơn bạn đã tham gia và chúc bạn có trải nghiệm tuyệt vời trên hệ thống của chúng tôi!"
+        )
+        .p("Trân trọng,")
+        .p("Ban quản trị.")
+        .make_html()
+    )
+
+
 if __name__ == "__main__":
     print(is_valid_email("hoang.tc194060@sis.hust.edu.vn"))

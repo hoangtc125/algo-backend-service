@@ -35,20 +35,26 @@ async def uvicorn_exception_handler(request: Request, exc: CustomHTTPException):
 @app.middleware("http")
 async def add_request_middleware(request: Request, call_next):
     start_time = time.time()
-    # if request.method != "OPTIONS":
-    #     try:
-    #         request_user = authentication(request)
-    #     except CustomHTTPException as e:
-    #         return JSONResponse(
-    #             status_code=e.status_code,
-    #             headers={
-    #                 "access-control-allow-origin": "*",
-    #                 "X-Process-Time": str(time.time() - start_time),
-    #             },
-    #             content=jsonable_encoder(
-    #                 {"status_code": e.error_code, "msg": e.error_message}
-    #             ),
-    #         )
+    if request.method != "OPTIONS":
+        try:
+            request_user = authentication(request)
+            authorization(
+                path=request.url.path,
+                request_role=request_user.role,
+                request_host=request.client.host,
+                request=request
+            )
+        except CustomHTTPException as e:
+            return JSONResponse(
+                status_code=e.status_code,
+                headers={
+                    "access-control-allow-origin": "*",
+                    "X-Process-Time": str(time.time() - start_time),
+                },
+                content=jsonable_encoder(
+                    {"status_code": e.error_code, "msg": e.error_message}
+                ),
+            )
     response = await call_next(request)
     process_time = time.time() - start_time
     response.headers["X-Process-Time"] = str(process_time)

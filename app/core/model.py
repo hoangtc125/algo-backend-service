@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Optional, TypeVar
 
 from app.core.config import project_config
+from app.core.constant import Provider
 
 
 f_json = open(project_config.RESPONSE_CODE_DIR, encoding="utf-8")
@@ -12,7 +13,7 @@ T = TypeVar("T")
 
 
 class BaseAuditModel(BaseModel):
-    created_by: str = "system"
+    created_by: str = Provider.SYSTEM
     created_at: int = int(datetime.now().timestamp())
     last_modified_by: str = ""
     last_modified_at: int = None
@@ -25,7 +26,7 @@ class HttpResponse(BaseModel):
 
 
 class TokenPayload(BaseModel):
-    email: Optional[str] = None
+    username: Optional[str] = None
     role: Optional[str] = None
     expire_time: Optional[int] = None
 
