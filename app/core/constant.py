@@ -1,3 +1,6 @@
+from enum import Enum
+
+
 class Role:
     ADMIN = "ADMIN"
     USER = "USER"
@@ -5,7 +8,8 @@ class Role:
     @staticmethod
     def get_all():
         return [Role.ADMIN, Role.USER]
-    
+
+
 class Provider:
     SYSTEM = "SYSTEM"
     FIREBASE = "FIREBASE"
@@ -17,10 +21,6 @@ class DateTime:
     TIME_FORMAT: str = "%H:%M:%S"
 
 
-class SortOrder:
-    DESC = "desc"
-    ASC = "asc"
-
-    @staticmethod
-    def get_list_sort_order():
-        return [SortOrder.DESC, SortOrder.ASC]
+class SortOrder(str, Enum):
+    ASC = 1
+    DESC = -1

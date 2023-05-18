@@ -26,7 +26,7 @@ def datetime_str_to_timestamp(date: str, format: str = DateTime.DATE_FORMAT) -> 
     return int(time.mktime(datetime.strptime(date, format).timetuple()))
 
 
-def to_datestring(timestamp: int, date_format=DateTime.DATE_FORMAT) -> str:
+def to_datestring(timestamp: int, date_format=DateTime.DATETIME_FORMAT) -> str:
     return datetime.fromtimestamp(timestamp).strftime(date_format)
 
 

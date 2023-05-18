@@ -1,19 +1,21 @@
-from fastapi import APIRouter, Depends, BackgroundTasks
+from typing import Dict
+from fastapi import APIRouter, Depends, BackgroundTasks, Query
 from fastapi.security import OAuth2PasswordRequestForm
 from firebase_admin.auth import verify_id_token
 from firebase_admin._auth_utils import InvalidIdTokenError
 
-from app.core.constant import Provider
+from app.core.constant import Provider, SortOrder
 from app.core.exception import CustomHTTPException
 from app.core.model import HttpResponse, success_response
 from app.core.oauth2 import CustomOAuth2PasswordBearer
 from app.core.api import AccountApi, get_permissions
 from app.core.config import project_config
+from app.core.socket import socket_connection
 from app.service.account import AccountService
 from app.model.account import AccountCreate, Account
 from app.service.mail import make_and_send_mail_active_account
 from app.util.auth import get_actor_from_request
-from app.core.socket import socket_connection
+from app.util.time import get_current_timestamp, to_datestring
 
 router = APIRouter()
 oauth2_scheme = CustomOAuth2PasswordBearer(tokenUrl=AccountApi.LOGIN)
@@ -55,7 +57,7 @@ async def register(account_create: AccountCreate, background_tasks: BackgroundTa
         result.email,
         f"http://0.0.0.0:{project_config.ALGO_PORT}/account/active?id={result.id}",
     )
-    await socket_connection.send_data(f"Email active account be sent to {result.email}")
+    await socket_connection.send_data(f"Email active account be sent to {result.email} at {to_datestring(get_current_timestamp())}")
     return success_response(data=result)
 
 
@@ -63,7 +65,7 @@ async def register(account_create: AccountCreate, background_tasks: BackgroundTa
 async def about_me(
     token: str = Depends(oauth2_scheme), actor=Depends(get_actor_from_request)
 ):
-    account = await AccountService().get_account(actor)
+    account = await AccountService().get_account({"_id": actor})
     lst_api_permissions = get_permissions(account.role)
     result = {"account": account, "api_permissions": lst_api_permissions}
     return success_response(data=result)
@@ -71,20 +73,31 @@ async def about_me(
 
 @router.get(AccountApi.GET, response_model=HttpResponse)
 async def get(
-    email: str,
+    id: str,
     token: str = Depends(oauth2_scheme),
 ):
-    result = await AccountService().get_account(email)
+    result = await AccountService().get_account({"_id": id})
     if not result:
         raise CustomHTTPException(error_type="account_not_exist")
     return success_response(data=result)
 
 
-@router.get(AccountApi.GET_ALL, response_model=HttpResponse)
-async def get(
+@router.post(AccountApi.GET_ALL, response_model=HttpResponse)
+async def get_all(
+    page_size: int = 20,
+    page_number: int = None,
+    query: Dict = {},
+    orderby: str = "created_at",
+    sort: SortOrder = Query(SortOrder.DESC),
     token: str = Depends(oauth2_scheme),
 ):
-    result = await AccountService().get_all()
+    result = await AccountService().get_all(
+        page_size=page_size,
+        page_number=page_number,
+        query=query,
+        orderby=orderby,
+        sort=sort.value,
+    )
     return success_response(data=result)
 
 

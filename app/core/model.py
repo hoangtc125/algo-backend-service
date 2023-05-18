@@ -1,5 +1,5 @@
 import json
-from pydantic import BaseModel
+from pydantic import BaseModel, root_validator
 from datetime import datetime
 from typing import Optional, TypeVar
 
@@ -14,9 +14,15 @@ T = TypeVar("T")
 
 class BaseAuditModel(BaseModel):
     created_by: str = Provider.SYSTEM
-    created_at: int = int(datetime.now().timestamp())
+    created_at: int = None
     last_modified_by: str = ""
     last_modified_at: int = None
+
+    @root_validator
+    def timestamp(cls, values):
+        if values["created_at"] is None:
+            values["created_at"] = int(datetime.now().timestamp())
+        return values
 
 
 class HttpResponse(BaseModel):

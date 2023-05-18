@@ -48,6 +48,7 @@ async def add_request_middleware(request: Request, call_next):
             request=request
         )
         response = await call_next(request)
+        response.headers["X-Process-Time"] = str(time.time() - start_time)
     except CustomHTTPException as e:
         response = JSONResponse(
             status_code=e.status_code,
@@ -59,9 +60,18 @@ async def add_request_middleware(request: Request, call_next):
                 {"status_code": e.error_code, "msg": e.error_message}
             ),
         )
+    except Exception as e:
+        response = JSONResponse(
+            status_code=500,
+            headers={
+                "access-control-allow-origin": "*",
+                "X-Process-Time": str(time.time() - start_time),
+            },
+            content=jsonable_encoder(
+                {"status_code": 500, "msg": str(e)}
+            ),
+        )
     finally:
-        process_time = time.time() - start_time
-        response.headers["X-Process-Time"] = str(process_time)
         logger.log(request.url.path, response, tag=logger.tag.END)
         return response
 
