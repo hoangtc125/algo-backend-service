@@ -15,6 +15,7 @@ class ProjectConfig(BaseSettings):
     SECRET_KEY = getenv("SECRET_KEY")
     SECURITY_ALGORITHM = getenv("SECURITY_ALGORITHM")
     MONGO_URL = getenv("MONGO_URL")
+    ENABLE_METRICS = getenv("ENABLE_METRICS", True)
     MONGO_DB = "algo"
     ALGO_PORT = int(getenv("ALGO_PORT", 8001))
     MAIL_USER = str(getenv("MAIL_USER", ""))
@@ -23,7 +24,7 @@ class ProjectConfig(BaseSettings):
     FIREBASE_CONFIG = BASE_DIR + r"/resources/algo-firebase.json"
     LOG_DIR = BASE_DIR + r"/log"
     LOG_TIME_OUT = 5
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7 
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
 
 
 project_config = ProjectConfig()

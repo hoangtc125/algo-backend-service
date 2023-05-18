@@ -4,6 +4,7 @@ from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
+from prometheus_fastapi_instrumentator import Instrumentator, metrics
 
 from app.core.config import project_config
 from app.core.filter import authentication, authorization
@@ -16,6 +17,23 @@ from app.worker.socket import socket_worker
 
 
 app = FastAPI()
+
+instrumentator = Instrumentator(
+    should_group_status_codes=False,
+    should_ignore_untemplated=True,
+    should_respect_env_var=True,
+    should_instrument_requests_inprogress=True,
+    excluded_handlers=[".*admin.*", "/metrics"],
+    env_var_name="ENABLE_METRICS",
+    inprogress_name="inprogress",
+    inprogress_labels=True,
+).instrument(app)
+
+
+@app.on_event("startup")
+async def _startup():
+    instrumentator.expose(app)
+
 
 app.add_middleware(
     CORSMiddleware,
