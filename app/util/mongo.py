@@ -12,7 +12,7 @@ def make_query(query: Dict):
 def make_body(body: Dict):
     res = {}
     for k, v in body.items():
-        if isinstance(v, dict):
+        if isinstance(v, dict) and not any("$" in item for item in list(v)):
             mini_query = make_body(v)
             for mk, mv in mini_query.items():
                 res[f"{k}.{mk}"] = mv

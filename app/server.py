@@ -32,6 +32,8 @@ instrumentator = Instrumentator(
 
 @app.on_event("startup")
 async def _startup():
+    print("Prometheus: http://localhost:9090")
+    print("Grafana: http://localhost:3000")
     instrumentator.expose(app)
 
 
