@@ -131,5 +131,25 @@ def make_mail_active_account(url):
     )
 
 
+def make_mail_welcome():
+    return (
+        EmailContent()
+        .h4("Xin chào,")
+        .p(
+            "Chúng tôi chân thành chào mừng bạn đến với hệ thống của chúng tôi! Đây là một thư gửi tự động để thông báo rằng tài khoản của bạn đã được tạo thành công."
+        )
+        .p(
+            "Cảm ơn bạn đã tham gia và tin tưởng sử dụng dịch vụ của chúng tôi. Chúng tôi cam kết cung cấp cho bạn trải nghiệm tuyệt vời và hỗ trợ tốt nhất."
+        )
+        .p(
+            "Nếu bạn có bất kỳ câu hỏi hoặc yêu cầu hỗ trợ nào, đừng ngần ngại liên hệ với chúng tôi. Chúng tôi luôn sẵn lòng giúp đỡ bạn."
+        )
+        .p("Một lần nữa, chào mừng bạn đến với hệ thống của chúng tôi!")
+        .p("Trân trọng,")
+        .p("Ban quản trị.")
+        .make_html()
+    )
+
+
 if __name__ == "__main__":
     print(is_valid_email("hoang.tc194060@sis.hust.edu.vn"))

@@ -12,6 +12,7 @@ from app.core.socket import socket_connection
 from app.core.log import logger
 from app.router.detect import router as detect_router
 from app.router.account import router as account_router
+from app.worker.socket import socket_worker
 
 
 app = FastAPI()
@@ -45,7 +46,7 @@ async def add_request_middleware(request: Request, call_next):
             path=request.url.path,
             request_role=request_user.role,
             request_host=request.client.host,
-            request=request
+            request=request,
         )
         response = await call_next(request)
         response.headers["X-Process-Time"] = str(time.time() - start_time)
@@ -67,22 +68,19 @@ async def add_request_middleware(request: Request, call_next):
                 "access-control-allow-origin": "*",
                 "X-Process-Time": str(time.time() - start_time),
             },
-            content=jsonable_encoder(
-                {"status_code": 500, "msg": str(e)}
-            ),
+            content=jsonable_encoder({"status_code": 500, "msg": str(e)}),
         )
     finally:
         logger.log(request.url.path, response, tag=logger.tag.END)
         return response
 
+
 app.mount("/ws", socket_connection())
 
+
 @app.post("/test_socket")
-async def test_socket(event_name, data: str):
-    return await socket_connection.send_data(
-        channel=event_name,
-        data=data
-    )
+def test_socket(event, data: str):
+    socket_worker.push(event=event, data=data)
 
 
 app.include_router(detect_router)

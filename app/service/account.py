@@ -3,9 +3,9 @@ from typing import Dict
 from app.core.exception import CustomHTTPException
 from app.core.model import TokenPayload
 from app.core.config import project_config
-from app.core.socket import socket_connection
-from app.core.constant import Provider, SortOrder
+from app.core.constant import Provider
 from app.model.account import Account, AccountCreate, AccountResponse
+from app.model.notification import Notification
 from app.repo.mongo import get_repo
 from app.util.model import get_dict, to_response_dto
 from app.util.time import get_current_timestamp, get_timestamp_after, to_datestring
@@ -14,6 +14,8 @@ from app.util.auth import (
     verify_password,
     create_access_token,
 )
+from app.worker.socket import socket_worker
+from app.worker.notification import notification_worker
 
 
 class AccountService:
@@ -52,7 +54,7 @@ class AccountService:
             active=False,
         )
         inserted_id = await self.account_repo.insert(account)
-        await socket_connection.send_data(
+        socket_worker.push(
             f"{account.email} has been created at {to_datestring(account.created_at)}"
         )
         return to_response_dto(inserted_id, account, AccountResponse)
@@ -61,7 +63,7 @@ class AccountService:
         check_account = await self.account_repo.get_one_by_id(id)
         if not check_account:
             await self.account_repo.insert(account, id)
-            await socket_connection.send_data(
+            socket_worker.push(
                 f"{account.email} has been created at {to_datestring(account.created_at)}"
             )
         expire_time = get_timestamp_after(
@@ -72,8 +74,11 @@ class AccountService:
                 username=account.email, role=account.role, expire_time=expire_time
             )
         )
-        await socket_connection.send_data(
+        socket_worker.push(
             f"{account.email} has been joined from {account.provider} at {to_datestring(get_current_timestamp())}"
+        )
+        notification_worker.create(
+            Notification(content=f"Welcome to Algo, {account.name}.", to=id)
         )
         return confirmation_token
 
@@ -97,12 +102,15 @@ class AccountService:
                 expire_time=expire_time,
             )
         )
-        await socket_connection.send_data(
+        socket_worker.push(
             f"{check_account.email} has been joined from {check_account.provider} at {to_datestring(get_current_timestamp())}"
         )
         return confirmation_token
 
     async def active_algo_account(self, id):
         doc_id = await self.account_repo.update_by_id(id, {"active": True})
-        await socket_connection.send_data(f"Account {id} has been actived  at {to_datestring(get_current_timestamp())}")
+        socket_worker.push(
+            f"Account {id} has been actived  at {to_datestring(get_current_timestamp())}"
+        )
+        notification_worker.create(Notification(content="Welcome to Algo", to=doc_id))
         return doc_id

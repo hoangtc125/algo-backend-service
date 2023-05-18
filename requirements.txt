@@ -9,3 +9,4 @@ python-jose==3.3.0
 pymongo==4.3.3
 python_multipart==0.0.6
 motor==3.1.2
+pre-commit==3.3.2

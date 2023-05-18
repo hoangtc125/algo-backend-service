@@ -8,6 +8,7 @@ from app.core.constant import SortOrder
 from app.core.log import logger
 from app.util.model import get_dict, get_response_model
 from app.util.mongo import make_query
+from app.util.time import get_current_timestamp
 
 
 T = TypeVar("T")
@@ -121,11 +122,15 @@ class BaseRepository:
 
     async def update(self, query: Dict, obj: Dict):
         query = make_query(query)
+        obj["last_modified_at"] = int(get_current_timestamp())
+        obj = make_query(obj)
         logger.log((inspect.currentframe().f_code.co_name, self.collection_name, query))
         await self.collection.update_one(query, {"$set": obj})
         return id
 
     async def update_by_id(self, id, obj: Dict):
+        obj["last_modified_at"] = int(get_current_timestamp())
+        obj = make_query(obj)
         logger.log((inspect.currentframe().f_code.co_name, self.collection_name, id))
         await self.collection.update_one({"_id": id}, {"$set": obj})
         return id
@@ -142,7 +147,7 @@ def get_repo(
     connection = MongoDBConnection.mongodb(url, db)
     collection_name = model.__name__.lower()
     if new_connection:
-        return BaseRepository(connection, model)
+        return BaseRepository(MongoDBConnection(url).get_connection(db), model)
     if MongoDBConnection.repositories.get(collection_name, None) is None:
         MongoDBConnection.repositories[collection_name] = BaseRepository(
             connection, model

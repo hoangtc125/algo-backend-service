@@ -1,10 +1,10 @@
 import json
 from pydantic import BaseModel, root_validator
-from datetime import datetime
 from typing import Optional, TypeVar
 
 from app.core.config import project_config
 from app.core.constant import Provider
+from app.util.time import get_current_timestamp
 
 
 f_json = open(project_config.RESPONSE_CODE_DIR, encoding="utf-8")
@@ -21,7 +21,9 @@ class BaseAuditModel(BaseModel):
     @root_validator
     def timestamp(cls, values):
         if values["created_at"] is None:
-            values["created_at"] = int(datetime.now().timestamp())
+            values["created_at"] = int(get_current_timestamp())
+        if values["last_modified_at"] is None:
+            values["last_modified_at"] = int(get_current_timestamp())
         return values
 
 

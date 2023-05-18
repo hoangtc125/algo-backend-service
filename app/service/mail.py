@@ -8,10 +8,9 @@ from typing import Dict, List
 from app.core.config import project_config
 from app.core.exception import CustomHTTPException
 from app.util.mail import (
-    is_valid_email,
     EmailContent,
+    is_valid_email,
     make_mail_content_card,
-    make_mail_active_account,
 )
 
 
@@ -20,15 +19,6 @@ def make_and_send_mail_card(card: Dict):
     Email(
         receiver_email=card.get("email"),
         subject="Yêu cầu xác thực tài khoản",
-        content=mail_content,
-    ).send()
-
-
-def make_and_send_mail_active_account(receiver_email, url):
-    mail_content = make_mail_active_account(url)
-    Email(
-        receiver_email=receiver_email,
-        subject="Kích hoạt tài khoản ALGO",
         content=mail_content,
     ).send()
 

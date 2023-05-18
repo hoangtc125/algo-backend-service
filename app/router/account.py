@@ -1,5 +1,5 @@
 from typing import Dict
-from fastapi import APIRouter, Depends, BackgroundTasks, Query
+from fastapi import APIRouter, Depends, Query
 from fastapi.security import OAuth2PasswordRequestForm
 from firebase_admin.auth import verify_id_token
 from firebase_admin._auth_utils import InvalidIdTokenError
@@ -10,12 +10,15 @@ from app.core.model import HttpResponse, success_response
 from app.core.oauth2 import CustomOAuth2PasswordBearer
 from app.core.api import AccountApi, get_permissions
 from app.core.config import project_config
-from app.core.socket import socket_connection
+from app.core.log import logger
 from app.service.account import AccountService
+from app.service.mail import Email
 from app.model.account import AccountCreate, Account
-from app.service.mail import make_and_send_mail_active_account
 from app.util.auth import get_actor_from_request
+from app.util.mail import make_mail_active_account
 from app.util.time import get_current_timestamp, to_datestring
+from app.worker.socket import socket_worker
+from app.worker.mail import mail_worker
 
 router = APIRouter()
 oauth2_scheme = CustomOAuth2PasswordBearer(tokenUrl=AccountApi.LOGIN)
@@ -35,10 +38,11 @@ async def login_firebase(firebase_token: str):
         decode_token = verify_id_token(firebase_token)
     except InvalidIdTokenError:
         raise CustomHTTPException(error_type="unauthenticated")
+    logger.log(decode_token)
     account = Account(
         created_by=Provider.FIREBASE,
-        name=decode_token["name"],
-        photo_url=decode_token["picture"],
+        name=decode_token.get("name", f"USER-{get_current_timestamp()}"),
+        photo_url=decode_token.get("picture"),
         email=decode_token["email"],
         provider=decode_token["firebase"]["sign_in_provider"],
         active=True,
@@ -50,14 +54,20 @@ async def login_firebase(firebase_token: str):
 
 
 @router.post(AccountApi.REGISTER, response_model=HttpResponse)
-async def register(account_create: AccountCreate, background_tasks: BackgroundTasks):
+async def register(account_create: AccountCreate):
     result = await AccountService().create_algo_account(account_create)
-    background_tasks.add_task(
-        make_and_send_mail_active_account,
-        result.email,
-        f"http://0.0.0.0:{project_config.ALGO_PORT}/account/active?id={result.id}",
+    mail_worker.push(
+        Email(
+            receiver_email=result.email,
+            subject="Kích hoạt tài khoản ALGO",
+            content=make_mail_active_account(
+                f"http://0.0.0.0:{project_config.ALGO_PORT}/account/active?id={result.id}"
+            ),
+        )
     )
-    await socket_connection.send_data(f"Email active account be sent to {result.email} at {to_datestring(get_current_timestamp())}")
+    socket_worker.push(
+        f"Email active account be sent to {result.email} at {to_datestring(get_current_timestamp())}"
+    )
     return success_response(data=result)
 
 

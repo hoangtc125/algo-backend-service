@@ -2,8 +2,6 @@ import logging
 import os, sys
 import threading
 import traceback
-import yaml
-from yaml.loader import SafeLoader
 from collections import deque
 from datetime import datetime
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -13,28 +11,37 @@ from app.core.config import project_config
 from app.core.api import API_PERMISSION
 from app.util.time import get_current_timestamp
 
+
 class MyTimedRotatingFileHandler(TimedRotatingFileHandler):
     def __init__(self, filename: str):
         self.__file_name = filename
         self.__base_dir = self.create_dir()
-        TimedRotatingFileHandler.__init__(self, self.__base_dir + "/" + self.__file_name + ".ini", when='midnight', interval=1)
-  
+        TimedRotatingFileHandler.__init__(
+            self,
+            self.__base_dir + "/" + self.__file_name + ".ini",
+            when="midnight",
+            interval=1,
+        )
+
     def doRollover(self):
         self.__base_dir = self.create_dir()
         self.stream.close()
-        self.stream = open(self.__base_dir + "/" + self.__file_name + ".ini", '+a', encoding="utf-8")
+        self.stream = open(
+            self.__base_dir + "/" + self.__file_name + ".ini", "+a", encoding="utf-8"
+        )
         self.rolloverAt = self.rolloverAt + self.interval
 
     @staticmethod
-    def create_dir(f_date_fmt = "YYYY/mm/dd"):
-        base_dir = project_config.LOG_DIR + "/" + str(datetime.now().date()).replace('-', '/')
+    def create_dir(f_date_fmt="YYYY/mm/dd"):
+        base_dir = (
+            project_config.LOG_DIR + "/" + str(datetime.now().date()).replace("-", "/")
+        )
         if not os.path.exists(base_dir):
             os.makedirs(base_dir)
         return base_dir
-    
+
 
 class Logger:
-
     def __init__(self):
         self.__pool = {}
         self.__input_data_queue = deque()
@@ -66,6 +73,7 @@ class Logger:
             DEBUG: str = "debug"
             ERROR: str = "error"
             INFO: str = "info"
+
         return Level
 
     @property
@@ -74,58 +82,86 @@ class Logger:
             START: str = "start"
             ADD: str = "add"
             END: str = "end"
+
         return Tag
 
     def __log(self):
         while True:
             try:
-                res = self.__get_latest_data()  # mapping message into a group with similar request_id
+                res = (
+                    self.__get_latest_data()
+                )  # mapping message into a group with similar request_id
                 if not res:
                     continue
 
-                request_id, latest_data ,tag, level = res
+                request_id, latest_data, tag, level = res
 
                 if tag == self.tag.START:
                     self.__pool[request_id] = {}
-                    self.__pool[request_id]['data'] = []
-                    self.__pool[request_id]['expired_at'] = get_current_timestamp() + project_config.LOG_TIME_OUT
+                    self.__pool[request_id]["data"] = []
+                    self.__pool[request_id]["expired_at"] = (
+                        get_current_timestamp() + project_config.LOG_TIME_OUT
+                    )
 
                     request, request_user = latest_data
                     if request_user:
-                        self.__pool[request_id]['data'].append((f"USER: {request_user.username}, ROLE: {request_user.role}", level))
+                        self.__pool[request_id]["data"].append(
+                            (
+                                f"USER: {request_user.username}, ROLE: {request_user.role}",
+                                level,
+                            )
+                        )
                     if request:
-                        self.__pool[request_id]['data'].append((f"CLIENT: client={request.client}", level))
-                        self.__pool[request_id]['data'].append((f"REQUEST: method={request.method}, url={request.url}", level))
+                        self.__pool[request_id]["data"].append(
+                            (f"CLIENT: client={request.client}", level)
+                        )
+                        self.__pool[request_id]["data"].append(
+                            (
+                                f"REQUEST: method={request.method}, url={request.url}",
+                                level,
+                            )
+                        )
                     continue
 
                 if request_id not in self.__pool.keys():
                     self.__pool[request_id] = {}
-                    self.__pool[request_id]['data'] = []
-                    self.__pool[request_id]['expired_at'] = get_current_timestamp() + project_config.LOG_TIME_OUT
+                    self.__pool[request_id]["data"] = []
+                    self.__pool[request_id]["expired_at"] = (
+                        get_current_timestamp() + project_config.LOG_TIME_OUT
+                    )
 
                 if tag == self.tag.ADD:
-                    self.__pool[request_id]['data'].extend([(str(msg), level) for msg in latest_data])
+                    self.__pool[request_id]["data"].extend(
+                        [(str(msg), level) for msg in latest_data]
+                    )
                     continue
 
                 path, response = latest_data
                 if response:
-                    self.__pool[request_id]['data'].append((f"RESPONSE: status={response.status_code}, process_time={response.headers['X-Process-Time']}", level))
+                    self.__pool[request_id]["data"].append(
+                        (
+                            f"RESPONSE: status={response.status_code}, process_time={response.headers['X-Process-Time']}",
+                            level,
+                        )
+                    )
                 else:
-                    self.__pool[request_id]['data'].append(("RESPONSE: None", level))
-                self.__pool[request_id]['data'].append(("\n=================================================\n", level))
+                    self.__pool[request_id]["data"].append(("RESPONSE: None", level))
+                self.__pool[request_id]["data"].append(
+                    ("\n=================================================\n", level)
+                )
 
-                router = path.split('/')[1]
+                router = path.split("/")[1]
                 if router not in self.__routers:
-                    router = 'stranger'
-                
-                for data in self.__pool[request_id]['data']:
+                    router = "stranger"
+
+                for data in self.__pool[request_id]["data"]:
                     _message, _level = data
                     self.__loggers[router][_level](_message)
                 self.__pool.pop(request_id)
             except Exception as e:
                 traceback.print_exc()
-        
-    def log(self, *args, tag='add', level='info'):
+
+    def log(self, *args, tag="add", level="info"):
         request_id = Logger.get_http_request_id(sys._getframe(0))
         while not self.__is_locked:
             self.__is_locked = True
@@ -141,10 +177,12 @@ class Logger:
         return self.__input_data_queue.popleft()
 
     @staticmethod
-    def get_http_request_id(frame=sys._getframe(0), context = 1):
+    def get_http_request_id(frame=sys._getframe(0), context=1):
         while frame:
-            if 'self' in frame.f_locals.keys() and isinstance(frame.f_locals['self'], BaseHTTPMiddleware):
-                return id(frame.f_locals['scope'])
+            if "self" in frame.f_locals.keys() and isinstance(
+                frame.f_locals["self"], BaseHTTPMiddleware
+            ):
+                return id(frame.f_locals["scope"])
             frame = frame.f_back
         return 1
 
@@ -162,11 +200,15 @@ class Logger:
     def create_file_handler(src, dst):
         logger = logging.getLogger(src)
         logger.setLevel(logging.DEBUG)
-        f_format = logging.Formatter('%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s', datefmt="%H:%M:%S")
+        f_format = logging.Formatter(
+            "%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s",
+            datefmt="%H:%M:%S",
+        )
         f_handler = MyTimedRotatingFileHandler(filename=dst)
         f_handler.setFormatter(f_format)
         f_handler.suffix = "%Y-%m-%d"
         logger.addHandler(f_handler)
         return logger
+
 
 logger = Logger()

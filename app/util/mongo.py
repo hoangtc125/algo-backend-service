@@ -19,4 +19,3 @@ def make_body(body: Dict):
         else:
             res[k] = v
     return res
-    
