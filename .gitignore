@@ -163,4 +163,5 @@ cython_debug/
 .env
 resources/algo-firebase.json
 docker/mongodb
+docker/rabbitmq
 log

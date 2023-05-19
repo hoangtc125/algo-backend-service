@@ -11,9 +11,9 @@ class MailWorker:
         self.__is_locked = False
         self.__flag_event = threading.Event()
 
-        logger_thread = threading.Thread(target=self.__push, args=())
-        logger_thread.daemon = True
-        logger_thread.start()
+        mail_thread = threading.Thread(target=self.__push, args=())
+        mail_thread.daemon = True
+        mail_thread.start()
 
     def __push(self):
         while True:

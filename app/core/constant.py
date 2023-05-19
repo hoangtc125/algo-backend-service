@@ -24,3 +24,9 @@ class DateTime:
 class SortOrder(str, Enum):
     ASC = 1
     DESC = -1
+
+
+class Queue:
+    NOTIFICATION = "notification"
+    MAIL = "mail"
+    SOCKET = "socket"

@@ -14,9 +14,9 @@ class NotificationWorker:
         self.__is_locked = False
         self.__flag_event = threading.Event()
 
-        logger_thread = threading.Thread(target=self.__create_wrapper, args=())
-        logger_thread.daemon = True
-        logger_thread.start()
+        notification_thread = threading.Thread(target=self.__create_wrapper, args=())
+        notification_thread.daemon = True
+        notification_thread.start()
 
     def __create_wrapper(self):
         try:

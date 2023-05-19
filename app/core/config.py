@@ -20,10 +20,11 @@ class ProjectConfig(BaseSettings):
     ALGO_PORT = int(getenv("ALGO_PORT", 8001))
     MAIL_USER = str(getenv("MAIL_USER", ""))
     MAIL_PASS = str(getenv("MAIL_PASS", ""))
+    RABBITMQ_URL = str(getenv("RABBITMQ_URL", ""))
     RESPONSE_CODE_DIR = BASE_DIR + r"/resources/response_code.json"
     FIREBASE_CONFIG = BASE_DIR + r"/resources/algo-firebase.json"
     LOG_DIR = BASE_DIR + r"/log"
-    LOG_TIME_OUT = 5
+    LOG_TIME_OUT = 10
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
 
 

@@ -82,19 +82,36 @@ class Logger:
             START: str = "start"
             ADD: str = "add"
             END: str = "end"
+            QUEUE: str = "queue"
 
         return Tag
 
     def __log(self):
         while True:
             try:
-                res = (
-                    self.__get_latest_data()
-                )  # mapping message into a group with similar request_id
+                if self.__pool:
+                    newest_id, newest_msg = list(self.__pool.items())[0]
+                    if newest_msg["expired_at"] <= get_current_timestamp():
+                        newest_msg["data"].append(
+                            (
+                                "\n=================================================\n",
+                                logger.level.DEBUG,
+                            )
+                        )
+                        for data in newest_msg["data"]:
+                            _message, _level = data
+                            self.__loggers["timeout"][_level](_message)
+                        self.__pool.pop(newest_id)
+
+                res = self.__get_latest_data()
                 if not res:
                     continue
 
                 request_id, latest_data, tag, level = res
+
+                if tag == self.tag.QUEUE:
+                    self.__loggers["queue"][level](str(latest_data))
+                    continue
 
                 if tag == self.tag.START:
                     self.__pool[request_id] = {}
@@ -170,6 +187,14 @@ class Logger:
             self.__flag_event.set()
             return None
 
+    def log_queue(self, *args, tag="queue", level="info"):
+        while not self.__is_locked:
+            self.__is_locked = True
+            self.__input_data_queue.append((None, args, tag, level))
+            self.__is_locked = False
+            self.__flag_event.set()
+            return None
+
     def __get_latest_data(self):
         if not self.__input_data_queue:
             self.__flag_event.clear()
@@ -190,6 +215,8 @@ class Logger:
     def get_dir_mapping():
         first_elements = set()  # Tạo một set để lưu trữ các phần tử duy nhất
         first_elements.add("stranger")
+        first_elements.add("queue")
+        first_elements.add("timeout")
         for path in API_PERMISSION:
             elements = path.split("/")  # Tách chuỗi theo dấu "/"
             first_element = elements[1]  # Lấy phần tử đầu tiên sau dấu "/"

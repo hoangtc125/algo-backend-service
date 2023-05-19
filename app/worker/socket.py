@@ -12,9 +12,9 @@ class SocketWorker:
         self.__is_locked = False
         self.__flag_event = threading.Event()
 
-        logger_thread = threading.Thread(target=self.__push_wrapper, args=())
-        logger_thread.daemon = True
-        logger_thread.start()
+        socket_thread = threading.Thread(target=self.__push_wrapper, args=())
+        socket_thread.daemon = True
+        socket_thread.start()
 
     def __push_wrapper(self):
         try:

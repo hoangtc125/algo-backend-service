@@ -1,10 +1,12 @@
 import time
+import traceback
 import uvicorn
+from typing import Dict
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-from prometheus_fastapi_instrumentator import Instrumentator, metrics
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.core.config import project_config
 from app.core.filter import authentication, authorization
@@ -14,6 +16,7 @@ from app.core.log import logger
 from app.router.detect import router as detect_router
 from app.router.account import router as account_router
 from app.worker.socket import socket_worker
+from app.queue.rabbitmq import rabbitmq
 
 
 app = FastAPI()
@@ -34,6 +37,7 @@ instrumentator = Instrumentator(
 async def _startup():
     print("Prometheus: http://localhost:9090")
     print("Grafana: http://localhost:3000")
+    print("RabbitMQ: http://localhost:15672")
     instrumentator.expose(app)
 
 
@@ -57,11 +61,14 @@ async def uvicorn_exception_handler(request: Request, exc: CustomHTTPException):
 @app.middleware("http")
 async def add_request_middleware(request: Request, call_next):
     start_time = time.time()
+    url_path = request.url.path
+    log_excepts = ["/metrics"]
     if request.method == "OPTIONS":
         return Response()
     try:
         request_user = authentication(request)
-        logger.log(request, request_user, tag=logger.tag.START)
+        if url_path not in log_excepts:
+            logger.log(request, request_user, tag=logger.tag.START)
         authorization(
             path=request.url.path,
             request_role=request_user.role,
@@ -82,6 +89,7 @@ async def add_request_middleware(request: Request, call_next):
             ),
         )
     except Exception as e:
+        traceback.print_exc()
         response = JSONResponse(
             status_code=500,
             headers={
@@ -91,16 +99,22 @@ async def add_request_middleware(request: Request, call_next):
             content=jsonable_encoder({"status_code": 500, "msg": str(e)}),
         )
     finally:
-        logger.log(request.url.path, response, tag=logger.tag.END)
+        if url_path not in log_excepts:
+            logger.log(request.url.path, response, tag=logger.tag.END)
         return response
 
 
 app.mount("/ws", socket_connection())
 
 
-@app.post("/test_socket")
+@app.post("/test/socket")
 def test_socket(event, data: str):
     socket_worker.push(event=event, data=data)
+
+
+@app.post("/test/rabbitmq")
+def test_rabbitmq(event, data: Dict):
+    rabbitmq.send(queue_name=event, message=data)
 
 
 app.include_router(detect_router)
