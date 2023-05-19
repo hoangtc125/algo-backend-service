@@ -10,16 +10,25 @@ from app.core.constant import Queue
 from app.core.log import logger
 from app.core.socket import socket_connection
 from app.repo.mongo import get_repo
+from app.model.notification import Notification
+from app.util.model import get_dict
 
 
 class RabbitMQ:
     def __init__(self):
+        print("--- rabbitmq has been created")
         self.rabbitmq_url = project_config.RABBITMQ_URL
         self.connection = None
         self.channel = None
         self.queues = {}
         self.__input_data_queue = deque()
         self.__is_locked = False
+        self.notification_repo = get_repo(
+            Notification,
+            url=project_config.MONGO_URL,
+            db=project_config.MONGO_DB,
+            new_connection=True,
+        )
 
         mq_thread = threading.Thread(target=self.__work, args=())
         mq_thread.daemon = True
@@ -63,7 +72,6 @@ class RabbitMQ:
         print("Connect to RabbitMQ")
 
         queue_config = {
-            Queue.MAIL: self.__process_mail,
             Queue.SOCKET: self.__process_socket,
             Queue.NOTIFICATION: self.__process_notification,
         }
@@ -87,26 +95,35 @@ class RabbitMQ:
 
     async def __send_message(self, queue_name, message):
         queue, _ = self.queues.get(queue_name, (None, None))
+        message = (
+            message
+            if type(message) in [str, int, dict, list, tuple, float, bool]
+            or message is None
+            else get_dict(message)
+        )
         if queue:
             await self.channel.default_exchange.publish(
                 aio_pika.Message(body=pickle.dumps(message)), routing_key=queue.name
             )
 
     async def __process_notification(self, message):
-        message = pickle.loads(message.body)
-        document = {"queue": Queue.NOTIFICATION, "message": message}
-        logger.log_queue(document)
+        try:
+            message = pickle.loads(message.body)
+            document = {"queue": Queue.NOTIFICATION, "message": message}
+            logger.log_queue(document)
+            res = Notification(**message)
+            await self.notification_repo.insert(res)
+        except:
+            traceback.print_exc()
 
     async def __process_socket(self, message):
-        message = pickle.loads(message.body)
-        document = {"queue": Queue.SOCKET, "message": message}
-        logger.log_queue(document)
-        await socket_connection.send_data(data=message)
-
-    async def __process_mail(self, message):
-        message = pickle.loads(message.body)
-        document = {"queue": Queue.MAIL, "message": message}
-        logger.log_queue(document)
+        try:
+            message = pickle.loads(message.body)
+            document = {"queue": Queue.SOCKET, "message": message}
+            logger.log_queue(document)
+            await socket_connection.send_data(data=message)
+        except:
+            traceback.print_exc()
 
 
 rabbitmq = RabbitMQ()

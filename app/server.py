@@ -4,7 +4,7 @@ import uvicorn
 from typing import Dict
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.encoders import jsonable_encoder
 from prometheus_fastapi_instrumentator import Instrumentator
 
@@ -13,6 +13,7 @@ from app.core.filter import authentication, authorization
 from app.core.exception import CustomHTTPException
 from app.core.socket import socket_connection
 from app.core.log import logger
+from app.core.constant import Queue
 from app.router.detect import router as detect_router
 from app.router.account import router as account_router
 from app.worker.socket import socket_worker
@@ -107,14 +108,19 @@ async def add_request_middleware(request: Request, call_next):
 app.mount("/ws", socket_connection())
 
 
+@app.get("/")
+def docs():
+    return RedirectResponse(url="/docs")
+
+
 @app.post("/test/socket")
 def test_socket(event, data: str):
     socket_worker.push(event=event, data=data)
 
 
 @app.post("/test/rabbitmq")
-def test_rabbitmq(event, data: Dict):
-    rabbitmq.send(queue_name=event, message=data)
+def test_rabbitmq():
+    rabbitmq.send(queue_name=Queue.SOCKET, message="Welcome to RabbitMQ")
 
 
 app.include_router(detect_router)

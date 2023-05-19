@@ -7,6 +7,7 @@ from app.util.mail import Email, send_mail
 
 class MailWorker:
     def __init__(self):
+        print("--- mail worker has been created")
         self.__input_data_queue = deque()
         self.__is_locked = False
         self.__flag_event = threading.Event()

@@ -8,6 +8,7 @@ from app.core.socket import socket_connection
 
 class SocketWorker:
     def __init__(self):
+        print("--- socket worker has been created")
         self.__input_data_queue = deque()
         self.__is_locked = False
         self.__flag_event = threading.Event()

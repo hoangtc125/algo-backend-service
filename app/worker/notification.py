@@ -10,6 +10,7 @@ from app.model.notification import Notification
 
 class NotificationWorker:
     def __init__(self):
+        print("--- notification worker has been created")
         self.__input_data_queue = deque()
         self.__is_locked = False
         self.__flag_event = threading.Event()

@@ -10,9 +10,5 @@ class Notification(BaseAuditModel):
     seen: Optional[bool] = False
 
 
-class NotificationCreate(Notification):
-    pass
-
-
 class NotificationResponse(Notification):
     id: str

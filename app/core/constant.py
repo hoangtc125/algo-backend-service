@@ -28,5 +28,4 @@ class SortOrder(str, Enum):
 
 class Queue:
     NOTIFICATION = "notification"
-    MAIL = "mail"
     SOCKET = "socket"
