@@ -2,7 +2,7 @@ import threading
 import traceback
 from collections import deque
 
-from app.service.mail import Email
+from app.util.mail import Email, send_mail
 
 
 class MailWorker:
@@ -21,7 +21,7 @@ class MailWorker:
                 res = self.__get_latest_data()
                 if not res:
                     continue
-                res.send()
+                send_mail(res)
             except Exception as e:
                 traceback.print_exc()
 

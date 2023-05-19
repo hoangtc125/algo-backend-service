@@ -1,5 +1,12 @@
 import re
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.header import Header
 from typing import List, Dict
+
+from app.core.config import project_config
+from app.core.exception import CustomHTTPException
 
 
 def is_valid_email(email: str) -> bool:
@@ -79,6 +86,43 @@ class EmailContent:
 
     def make_html(self):
         return f"<html><body>{''.join([item for item in self.content])}</body></html>"
+
+
+class Email:
+    def __init__(
+        self,
+        receiver_email: str,
+        subject: str,
+        content: EmailContent,
+        cc_email: List = [],
+    ) -> None:
+        if not is_valid_email(receiver_email):
+            raise CustomHTTPException(error_type="mail_invalid")
+        self.receiver_email = receiver_email
+        self.message = MIMEMultipart()
+        self.message["From"] = Header(project_config.MAIL_USER, "utf-8")
+        self.message["To"] = Header(receiver_email, "utf-8")
+        self.message["Cc"] = ", ".join(cc_email)
+        self.message["Subject"] = Header(subject, "utf-8")
+        self.message.attach(MIMEText(content, "html", "utf-8"))
+
+
+def send_mail(email: Email):
+    try:
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.ehlo()
+        server.starttls()
+        server.login(project_config.MAIL_USER, project_config.MAIL_PASS)
+        server.sendmail(
+            project_config.MAIL_USER,
+            email.receiver_email,
+            email.message.as_string(),
+        )
+        print("Email sent successfully!")
+    except Exception as e:
+        print("Error sending email:", e)
+    finally:
+        server.quit()
 
 
 def make_mail_content_card(card: Dict):

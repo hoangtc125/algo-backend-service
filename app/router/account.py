@@ -12,11 +12,11 @@ from app.core.api import AccountApi, get_permissions
 from app.core.config import project_config
 from app.core.log import logger
 from app.service.account import AccountService
-from app.service.mail import Email
 from app.model.account import AccountCreate, Account
 from app.util.auth import get_actor_from_request
 from app.util.mail import make_mail_active_account
 from app.util.time import get_current_timestamp, to_datestring
+from app.util.mail import Email
 from app.worker.socket import socket_worker
 from app.worker.mail import mail_worker
 
