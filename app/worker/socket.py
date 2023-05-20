@@ -21,10 +21,13 @@ class SocketWorker:
 
     def __push_wrapper(self):
         try:
-            loop = asyncio.get_event_loop()
+            self.loop = asyncio.get_event_loop()
         except:
-            loop = asyncio.new_event_loop()
-        loop.run_until_complete(asyncio.wait([self.__push()]))
+            self.loop = asyncio.new_event_loop()
+        self.loop.run_until_complete(asyncio.wait([self.__push()]))
+
+    def stop_event_loop(self):
+        self.loop.stop()
 
     async def __push(self):
         while True:

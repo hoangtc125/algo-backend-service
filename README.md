@@ -43,6 +43,8 @@ Dự án này sử dụng Docker để triển khai và quản lý các dịch v
 
 - Grafana: Công cụ trực quan hóa dữ liệu và xây dựng bảng điều khiển cho dữ liệu giám sát từ Prometheus.
 
+- Locust: Công cụ thử nghiệm tải và kiểm tra hiệu suất hệ thống.
+
 Cấu trúc thư mục Docker của dự án:
 
 ```shell

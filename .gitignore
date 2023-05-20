@@ -165,3 +165,5 @@ resources/algo-firebase.json
 docker/mongodb
 docker/rabbitmq
 log
+.vscode
+.metals

@@ -14,7 +14,7 @@ from app.core.socket import socket_connection
 from app.core.log import logger
 from app.core.constant import Queue
 from app.core.model import SocketPayload
-from app.core.terminal import services_info
+from app.core.terminal import server_info, services_info
 from app.router.detect import router as detect_router
 from app.router.account import router as account_router
 from app.worker.socket import socket_worker
@@ -44,8 +44,7 @@ async def _startup():
 @app.on_event("shutdown")
 async def _shutdown_event():
     try:
-        loop = asyncio.get_event_loop()
-        loop.close()
+        server_info()
     except:
         pass
 
@@ -86,6 +85,9 @@ async def add_request_middleware(request: Request, call_next):
         )
         response = await call_next(request)
         response.headers["X-Process-Time"] = str(time.time() - start_time)
+        if url_path not in log_excepts:
+            logger.log(request.url.path, response, tag=logger.tag.END)
+        return response
     except CustomHTTPException as e:
         response = JSONResponse(
             status_code=e.status_code,
@@ -97,6 +99,9 @@ async def add_request_middleware(request: Request, call_next):
                 {"status_code": e.error_code, "msg": e.error_message}
             ),
         )
+        if url_path not in log_excepts:
+            logger.log(request.url.path, response, tag=logger.tag.END)
+        return response
     except Exception as e:
         traceback.print_exc()
         response = JSONResponse(
@@ -107,7 +112,6 @@ async def add_request_middleware(request: Request, call_next):
             },
             content=jsonable_encoder({"status_code": 500, "msg": str(e)}),
         )
-    finally:
         if url_path not in log_excepts:
             logger.log(request.url.path, response, tag=logger.tag.END)
         return response

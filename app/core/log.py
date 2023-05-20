@@ -89,19 +89,19 @@ class Logger:
     def __log(self):
         while True:
             try:
-                if self.__pool:
-                    newest_id, newest_msg = list(self.__pool.items())[0]
-                    if newest_msg["expired_at"] <= get_current_timestamp():
-                        newest_msg["data"].append(
-                            (
-                                "\n=================================================\n",
-                                logger.level.DEBUG,
-                            )
-                        )
-                        for data in newest_msg["data"]:
-                            _message, _level = data
-                            self.__loggers["timeout"][_level](_message)
-                        self.__pool.pop(newest_id)
+                # if self.__pool:
+                #     newest_id, newest_msg = list(self.__pool.items())[0]
+                #     if newest_msg["expired_at"] <= get_current_timestamp():
+                #         newest_msg["data"].append(
+                #             (
+                #                 "\n=================================================\n",
+                #                 logger.level.DEBUG,
+                #             )
+                #         )
+                #         for data in newest_msg["data"]:
+                #             _message, _level = data
+                #             self.__loggers["timeout"][_level](_message)
+                #         self.__pool.pop(newest_id)
 
                 res = self.__get_latest_data()
                 if not res:
@@ -116,9 +116,9 @@ class Logger:
                 if tag == self.tag.START:
                     self.__pool[request_id] = {}
                     self.__pool[request_id]["data"] = []
-                    self.__pool[request_id]["expired_at"] = (
-                        get_current_timestamp() + project_config.LOG_TIME_OUT
-                    )
+                    # self.__pool[request_id]["expired_at"] = (
+                    #     get_current_timestamp() + project_config.LOG_TIME_OUT
+                    # )
 
                     request, request_user = latest_data
                     if request_user:
@@ -143,9 +143,9 @@ class Logger:
                 if request_id not in self.__pool.keys():
                     self.__pool[request_id] = {}
                     self.__pool[request_id]["data"] = []
-                    self.__pool[request_id]["expired_at"] = (
-                        get_current_timestamp() + project_config.LOG_TIME_OUT
-                    )
+                    # self.__pool[request_id]["expired_at"] = (
+                    #     get_current_timestamp() + project_config.LOG_TIME_OUT
+                    # )
 
                 if tag == self.tag.ADD:
                     self.__pool[request_id]["data"].extend(
@@ -173,7 +173,7 @@ class Logger:
 
                 for data in self.__pool[request_id]["data"]:
                     _message, _level = data
-                    self.__loggers[router][_level](_message)
+                    self.__loggers[router][_level](f"{request_id} - {_message}")
                 self.__pool.pop(request_id)
             except Exception as e:
                 traceback.print_exc()

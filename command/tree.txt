@@ -1,4 +1,10 @@
 .
+|____command
+| |____tree.sh
+| |____benchmark.sh
+| |____docker.sh
+| |____tree.txt
+| |____server.sh
 |____.pre-commit-config.yaml
 |____docker
 | |____mongodb.compose.yml
@@ -47,7 +53,6 @@
 | | |____socket.py
 | | |____api.py
 | | |____log.py
-|____command.sh
 |____resources
 | |____grafana.json
 | |____algo-firebase.json
@@ -55,5 +60,6 @@
 |____requirements.txt
 |____.gitignore
 |____.env
+|____benchmark
+| |____login.py
 |____log
-|____tree.txt

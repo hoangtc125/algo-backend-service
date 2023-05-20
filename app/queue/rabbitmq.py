@@ -37,11 +37,14 @@ class RabbitMQ:
 
     def __work(self):
         try:
-            loop = asyncio.get_event_loop()
+            self.loop = asyncio.get_event_loop()
         except:
-            loop = asyncio.new_event_loop()
+            self.loop = asyncio.new_event_loop()
 
-        loop.run_until_complete(asyncio.wait([self.__connect()]))
+        self.loop.run_until_complete(asyncio.wait([self.__connect()]))
+
+    def stop_event_loop(self):
+        self.loop.stop()
 
     async def __create(self):
         while True:

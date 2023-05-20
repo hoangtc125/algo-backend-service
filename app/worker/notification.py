@@ -21,10 +21,13 @@ class NotificationWorker:
 
     def __create_wrapper(self):
         try:
-            loop = asyncio.get_event_loop()
+            self.loop = asyncio.get_event_loop()
         except:
-            loop = asyncio.new_event_loop()
-        loop.run_until_complete(asyncio.wait([self.__create()]))
+            self.loop = asyncio.new_event_loop()
+        self.loop.run_until_complete(asyncio.wait([self.__create()]))
+
+    def stop_event_loop(self):
+        self.loop.stop()
 
     async def __create(self):
         notification_repo = get_repo(

@@ -9,6 +9,7 @@ def services_info():
         ["Prometheus", "http://localhost:9090"],
         ["Grafana", "http://localhost:3000"],
         ["RabbitMQ", "http://localhost:15672"],
+        ["Locust", "http://localhost:8089"],
         ["Server", "http://localhost:8001"],
     ]
     headers = [Fore.LIGHTGREEN_EX + "Service", Fore.LIGHTGREEN_EX + "URL"]
