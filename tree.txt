@@ -1,0 +1,59 @@
+.
+|____.pre-commit-config.yaml
+|____docker
+| |____mongodb.compose.yml
+| |____rabbitmq.compose.yml
+| |____prometheus
+| | |____prometheus.yml
+| |____grafana
+| | |____provisioning
+| |____monitor.compose.yml
+|____README.md
+|____app
+| |____server.py
+| |____util
+| | |____mongo.py
+| | |____model.py
+| | |____auth.py
+| | |____mail.py
+| | |____time.py
+| |____model
+| | |____card.py
+| | |____account.py
+| | |____notification.py
+| |____router
+| | |____detect.py
+| | |____account.py
+| |____worker
+| | |____mail.py
+| | |____notification.py
+| | |____socket.py
+| |____queue
+| | |____rabbitmq.py
+| |____service
+| | |____account.py
+| | |____notification.py
+| |____repo
+| | |____mongo.py
+| |____core
+| | |____exception.py
+| | |____oauth2.py
+| | |____filter.py
+| | |____terminal.py
+| | |____model.py
+| | |____auth.py
+| | |____config.py
+| | |____constant.py
+| | |____socket.py
+| | |____api.py
+| | |____log.py
+|____command.sh
+|____resources
+| |____grafana.json
+| |____algo-firebase.json
+| |____response_code.json
+|____requirements.txt
+|____.gitignore
+|____.env
+|____log
+|____tree.txt
