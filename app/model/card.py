@@ -60,7 +60,7 @@ class CardHUST(Card):
         return values
 
     @classmethod
-    def get_detect_guide(self):
+    def get_detect_guide(cls):
         return {
             "school": "HANOI UNIVERSITY OF SCIENCE AND TECHNOLOGY",
             "fullname": "Họ tên / Name",
@@ -111,7 +111,7 @@ class CardHUCE(Card):
         return values
 
     @classmethod
-    def get_detect_guide(self):
+    def get_detect_guide(cls):
         return {
             "school": "NATIONAL UNIVERSITY OF CIVIL ENGINEERING",
             "major": "Khoa / Faculty.",
@@ -159,7 +159,7 @@ class CardNEU(Card):
         return values
 
     @classmethod
-    def get_detect_guide(self):
+    def get_detect_guide(cls):
         return {
             "school": "TRƯỜNG ĐẠI HỌC KINH TẾ QUỐC DÂN",
             "fullname": "THẺ SINH VIÊN",

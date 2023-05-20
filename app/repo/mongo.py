@@ -19,8 +19,8 @@ class MongoDBConnection:
     connection = None
 
     def __init__(self, url):
-        print(f"Connect to MongoDB")
         self.client = AsyncIOMotorClient(url)
+        print(f"Connect to MongoDB")
 
     def get_connection(self, database):
         return self.client[database]
@@ -29,7 +29,7 @@ class MongoDBConnection:
         self.client.close()
 
     @classmethod
-    def mongodb(self, url, db):
+    def mongodb(cls, url, db):
         if MongoDBConnection.connection is None:
             MongoDBConnection.connection = MongoDBConnection(url).get_connection(db)
         return MongoDBConnection.connection

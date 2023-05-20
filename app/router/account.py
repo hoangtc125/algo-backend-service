@@ -6,7 +6,7 @@ from firebase_admin._auth_utils import InvalidIdTokenError
 
 from app.core.constant import Provider, SortOrder
 from app.core.exception import CustomHTTPException
-from app.core.model import HttpResponse, success_response
+from app.core.model import HttpResponse, SocketPayload, success_response
 from app.core.oauth2 import CustomOAuth2PasswordBearer
 from app.core.api import AccountApi, get_permissions
 from app.core.config import project_config
@@ -66,7 +66,9 @@ async def register(account_create: AccountCreate):
         )
     )
     socket_worker.push(
-        f"Email active account be sent to {result.email} at {to_datestring(get_current_timestamp())}"
+        SocketPayload(
+            data=f"Email active account be sent to {result.email} at {to_datestring(get_current_timestamp())}"
+        )
     )
     return success_response(data=result)
 

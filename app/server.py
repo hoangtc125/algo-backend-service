@@ -1,19 +1,20 @@
+import asyncio
 import time
 import traceback
 import uvicorn
-from typing import Dict
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.encoders import jsonable_encoder
 from prometheus_fastapi_instrumentator import Instrumentator
-
 from app.core.config import project_config
 from app.core.filter import authentication, authorization
 from app.core.exception import CustomHTTPException
 from app.core.socket import socket_connection
 from app.core.log import logger
 from app.core.constant import Queue
+from app.core.model import SocketPayload
+from app.core.terminal import services_info
 from app.router.detect import router as detect_router
 from app.router.account import router as account_router
 from app.worker.socket import socket_worker
@@ -36,10 +37,17 @@ instrumentator = Instrumentator(
 
 @app.on_event("startup")
 async def _startup():
-    print("Prometheus: http://localhost:9090")
-    print("Grafana: http://localhost:3000")
-    print("RabbitMQ: http://localhost:15672")
     instrumentator.expose(app)
+    services_info()
+
+
+@app.on_event("shutdown")
+async def _shutdown_event():
+    try:
+        loop = asyncio.get_event_loop()
+        loop.close()
+    except:
+        pass
 
 
 app.add_middleware(
@@ -114,13 +122,13 @@ def docs():
 
 
 @app.post("/test/socket")
-def test_socket(event, data: str):
-    socket_worker.push(event=event, data=data)
+def test_socket(socket_payload: SocketPayload):
+    socket_worker.push(socket_payload=socket_payload)
 
 
 @app.post("/test/rabbitmq")
-def test_rabbitmq():
-    rabbitmq.send(queue_name=Queue.SOCKET, message="Welcome to RabbitMQ")
+def test_rabbitmq(socket_payload: SocketPayload):
+    rabbitmq.send(queue_name=Queue.SOCKET, message=socket_payload)
 
 
 app.include_router(detect_router)

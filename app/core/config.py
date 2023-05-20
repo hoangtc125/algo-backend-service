@@ -6,6 +6,10 @@ from os import getenv
 from dotenv import load_dotenv
 from pydantic import BaseSettings
 
+from app.core.terminal import server_info
+
+server_info()
+
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
 load_dotenv(BASE_DIR + r"/.env")
 

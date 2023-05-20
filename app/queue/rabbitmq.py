@@ -9,6 +9,7 @@ from app.core.config import project_config
 from app.core.constant import Queue
 from app.core.log import logger
 from app.core.socket import socket_connection
+from app.core.model import SocketPayload
 from app.repo.mongo import get_repo
 from app.model.notification import Notification
 from app.util.model import get_dict
@@ -67,25 +68,31 @@ class RabbitMQ:
         return self.__input_data_queue.popleft()
 
     async def __connect(self):
-        self.connection = await aio_pika.connect_robust(self.rabbitmq_url)
-        self.channel = await self.connection.channel()
-        print("Connect to RabbitMQ")
+        try:
+            self.connection = await aio_pika.connect_robust(self.rabbitmq_url)
+            self.channel = await self.connection.channel()
+            print("Connect to RabbitMQ")
 
-        queue_config = {
-            Queue.SOCKET: self.__process_socket,
-            Queue.NOTIFICATION: self.__process_notification,
-        }
+            queue_config = {
+                Queue.SOCKET: self.__process_socket,
+                Queue.NOTIFICATION: self.__process_notification,
+            }
 
-        tasks = []
-        for queue_name, process_func in queue_config.items():
-            queue = await self.channel.declare_queue(queue_name)
-            self.queues[queue_name] = (queue, process_func)
-            task = asyncio.ensure_future(
-                self.__consume_and_process(queue, process_func)
-            )
-            tasks.append(task)
-        tasks.append(asyncio.ensure_future(self.__create()))
-        await asyncio.gather(*tasks)
+            tasks = []
+            for queue_name, process_func in queue_config.items():
+                queue = await self.channel.declare_queue(queue_name)
+                self.queues[queue_name] = (queue, process_func)
+                task = asyncio.ensure_future(
+                    self.__consume_and_process(queue, process_func)
+                )
+                tasks.append(task)
+            tasks.append(asyncio.ensure_future(self.__create()))
+            await asyncio.gather(*tasks)
+        except aio_pika.exceptions.AMQPConnectionError as e:
+            logger.log_queue(str(e))
+            print(str(e))
+            await asyncio.sleep(10)
+            await self.__connect()
 
     async def __consume_and_process(self, queue, process_func):
         async with queue.iterator() as queue_iter:
@@ -119,9 +126,10 @@ class RabbitMQ:
     async def __process_socket(self, message):
         try:
             message = pickle.loads(message.body)
+            socket_payload = SocketPayload(**message)
             document = {"queue": Queue.SOCKET, "message": message}
             logger.log_queue(document)
-            await socket_connection.send_data(data=message)
+            await socket_connection.send_data_to_client(socket_payload=socket_payload)
         except:
             traceback.print_exc()
 

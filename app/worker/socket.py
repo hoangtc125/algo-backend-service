@@ -2,8 +2,10 @@ import asyncio
 import threading
 import traceback
 from collections import deque
+from typing import Any
 
 from app.core.socket import socket_connection
+from app.core.model import SocketPayload
 
 
 class SocketWorker:
@@ -30,15 +32,14 @@ class SocketWorker:
                 res = self.__get_latest_data()
                 if not res:
                     continue
-                event, data = res
-                await socket_connection.send_data(channel=event, data=data)
+                await socket_connection.send_data_to_client(res)
             except Exception as e:
                 traceback.print_exc()
 
-    def push(self, data, event: str = "system"):
+    def push(self, socket_payload: SocketPayload):
         while not self.__is_locked:
             self.__is_locked = True
-            self.__input_data_queue.append((event, data))
+            self.__input_data_queue.append(socket_payload)
             self.__is_locked = False
             self.__flag_event.set()
             return None

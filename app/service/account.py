@@ -1,7 +1,7 @@
 from typing import Dict
 
 from app.core.exception import CustomHTTPException
-from app.core.model import TokenPayload
+from app.core.model import TokenPayload, SocketPayload
 from app.core.config import project_config
 from app.core.constant import Provider
 from app.model.account import Account, AccountCreate, AccountResponse
@@ -55,7 +55,9 @@ class AccountService:
         )
         inserted_id = await self.account_repo.insert(account)
         socket_worker.push(
-            f"{account.email} has been created at {to_datestring(account.created_at)}"
+            SocketPayload(
+                data=f"{account.email} has been created at {to_datestring(account.created_at)}"
+            )
         )
         return to_response_dto(inserted_id, account, AccountResponse)
 
@@ -64,7 +66,9 @@ class AccountService:
         if not check_account:
             await self.account_repo.insert(account, id)
             socket_worker.push(
-                f"{account.email} has been created at {to_datestring(account.created_at)}"
+                SocketPayload(
+                    data=f"{account.email} has been created at {to_datestring(account.created_at)}"
+                )
             )
         expire_time = get_timestamp_after(
             minutes=project_config.ACCESS_TOKEN_EXPIRE_MINUTES
@@ -75,7 +79,9 @@ class AccountService:
             )
         )
         socket_worker.push(
-            f"{account.email} has been joined from {account.provider} at {to_datestring(get_current_timestamp())}"
+            SocketPayload(
+                data=f"{account.email} has been joined from {account.provider} at {to_datestring(get_current_timestamp())}"
+            )
         )
         notification_worker.create(
             Notification(content=f"Welcome to Algo, {account.name}.", to=id)
@@ -103,14 +109,18 @@ class AccountService:
             )
         )
         socket_worker.push(
-            f"{check_account.email} has been joined from {check_account.provider} at {to_datestring(get_current_timestamp())}"
+            SocketPayload(
+                data=f"{check_account.email} has been joined from {check_account.provider} at {to_datestring(get_current_timestamp())}"
+            )
         )
         return confirmation_token
 
     async def active_algo_account(self, id):
         doc_id = await self.account_repo.update_by_id(id, {"active": True})
         socket_worker.push(
-            f"Account {id} has been actived  at {to_datestring(get_current_timestamp())}"
+            SocketPayload(
+                data=f"Account {id} has been actived  at {to_datestring(get_current_timestamp())}"
+            )
         )
         notification_worker.create(Notification(content="Welcome to Algo", to=doc_id))
         return doc_id

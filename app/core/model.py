@@ -1,6 +1,6 @@
 import json
 from pydantic import BaseModel, root_validator
-from typing import Optional, TypeVar
+from typing import Any, Optional, TypeVar
 
 from app.core.config import project_config
 from app.core.constant import Provider
@@ -44,6 +44,12 @@ class ConfirmationToken(BaseModel):
     token: str
     created_at: int
     expires_at: int
+
+
+class SocketPayload(BaseModel):
+    client_id: str = None
+    channel: str = "system"
+    data: Any = None
 
 
 def custom_response(status_code, message: str, data: T) -> HttpResponse:
