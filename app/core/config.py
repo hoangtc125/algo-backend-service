@@ -19,12 +19,13 @@ class ProjectConfig(BaseSettings):
     SECRET_KEY = getenv("SECRET_KEY")
     SECURITY_ALGORITHM = getenv("SECURITY_ALGORITHM")
     MONGO_URL = getenv("MONGO_URL")
-    ENABLE_METRICS = getenv("ENABLE_METRICS", True)
-    MONGO_DB = "algo"
     ALGO_PORT = int(getenv("ALGO_PORT", 8001))
     MAIL_USER = str(getenv("MAIL_USER", ""))
     MAIL_PASS = str(getenv("MAIL_PASS", ""))
     RABBITMQ_URL = str(getenv("RABBITMQ_URL", ""))
+    ENABLE_METRICS = os.getenv("ENABLE_METRICS", "True").lower() in ("true", "1", "t")
+    ENABLE_LOGGING = os.getenv("ENABLE_LOGGING", "True").lower() in ("true", "1", "t")
+    MONGO_DB = "algo"
     RESPONSE_CODE_DIR = BASE_DIR + r"/resources/response_code.json"
     FIREBASE_CONFIG = BASE_DIR + r"/resources/algo-firebase.json"
     LOG_DIR = BASE_DIR + r"/log"

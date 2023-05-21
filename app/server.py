@@ -1,4 +1,3 @@
-import asyncio
 import time
 import traceback
 import uvicorn
@@ -7,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.encoders import jsonable_encoder
 from prometheus_fastapi_instrumentator import Instrumentator
+
 from app.core.config import project_config
 from app.core.filter import authentication, authorization
 from app.core.exception import CustomHTTPException

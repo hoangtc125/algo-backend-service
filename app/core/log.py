@@ -64,6 +64,7 @@ class Logger:
         logger_thread = threading.Thread(target=self.__log, args=())
         logger_thread.daemon = True
         logger_thread.start()
+        print("--- log worker has been created")
 
     @property
     def level(self):
@@ -179,6 +180,8 @@ class Logger:
                 traceback.print_exc()
 
     def log(self, *args, tag="add", level="info"):
+        if not project_config.ENABLE_LOGGING:
+            return
         request_id = Logger.get_http_request_id(sys._getframe(0))
         while not self.__is_locked:
             self.__is_locked = True
@@ -188,6 +191,8 @@ class Logger:
             return None
 
     def log_queue(self, *args, tag="queue", level="info"):
+        if not project_config.ENABLE_LOGGING:
+            return
         while not self.__is_locked:
             self.__is_locked = True
             self.__input_data_queue.append((None, args, tag, level))
