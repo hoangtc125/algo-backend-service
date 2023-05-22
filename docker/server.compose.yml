@@ -1,0 +1,10 @@
+version: '3.8'
+services:
+  algo-server:
+    image: algo-server:latest
+    ports:
+      - 8001:8001
+    volumes:
+      - ./log:/algo/log
+      - ../.env:/algo/.env
+    network_mode: "host" # to test locally running service

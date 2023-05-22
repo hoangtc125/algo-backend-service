@@ -7,3 +7,4 @@ services:
       - 15672:15672
     volumes:
       - ./rabbitmq:/var/lib/rabbitmq
+    network_mode: "host" # to test locally running service

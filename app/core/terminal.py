@@ -9,6 +9,7 @@ def services_info():
         ["Prometheus", "http://localhost:9090"],
         ["Grafana", "http://localhost:3000"],
         ["RabbitMQ", "http://localhost:15672"],
+        ["Redis", "http://localhost:6379"],
         ["Locust", "http://localhost:8089"],
         ["Server", "http://localhost:8001"],
     ]

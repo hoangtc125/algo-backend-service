@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  algo-redis:
+    image: redis:6.2.7
+    ports:
+      - 6379:6379
+    network_mode: "host"
+
+  algo-rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - ./rabbitmq:/var/lib/rabbitmq
+    network_mode: "host"
+
+  algo-mongodb:
+    image: mongo:4.4.15
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: 125
+    ports:
+      - 27017:27017
+    volumes:
+      - ./mongodb:/data/db
+    network_mode: "host"
+
+  algo-prometheus:
+    image: prom/prometheus:v2.38.0
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - 9090:9090
+    network_mode: "host"
+
+  algo-grafana:
+    image: grafana/grafana:9.1.0
+    volumes:
+      - ./grafana/provisioning/:/etc/grafana/provisioning/
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+    ports:
+      - 3000:3000
+    network_mode: "host"
+
+  algo-server:
+    image: algo-server:latest
+    ports:
+      - 8001:8001
+    volumes:
+      - ./log:/algo/log
+      - ../.env:/algo/.env
+    network_mode: "host"

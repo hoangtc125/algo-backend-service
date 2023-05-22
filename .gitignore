@@ -164,6 +164,8 @@ cython_debug/
 resources/algo-firebase.json
 docker/mongodb
 docker/rabbitmq
+docker/grafana
+docker/log
 log
 .vscode
 .metals
