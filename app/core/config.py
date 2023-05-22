@@ -23,6 +23,7 @@ class ProjectConfig(BaseSettings):
     MAIL_USER = str(getenv("MAIL_USER", ""))
     MAIL_PASS = str(getenv("MAIL_PASS", ""))
     RABBITMQ_URL = str(getenv("RABBITMQ_URL", ""))
+    REDIS_HOST = str(getenv("REDIS_HOST", ""))
     ENABLE_METRICS = os.getenv("ENABLE_METRICS", "True").lower() in ("true", "1", "t")
     ENABLE_LOGGING = os.getenv("ENABLE_LOGGING", "True").lower() in ("true", "1", "t")
     MONGO_DB = "algo"
