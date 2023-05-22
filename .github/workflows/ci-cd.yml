@@ -32,4 +32,4 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         push: true
-        tags: hoangtc125admin/algo:latest
+        tags: hoangtc125admin/algo:server
