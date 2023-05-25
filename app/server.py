@@ -72,13 +72,14 @@ async def add_request_middleware(request: Request, call_next):
     url_path = request.url.path
     log_excepts = ["/metrics"]
     if request.method == "OPTIONS":
-        return Response()
+        response = await call_next(request)
+        return response
     try:
         request_user = authentication(request)
         if url_path not in log_excepts:
             logger.log(request, request_user, tag=logger.tag.START)
         authorization(
-            path=request.url.path,
+            path=url_path,
             request_role=request_user.role,
             request_host=request.client.host,
             request=request,
@@ -86,7 +87,7 @@ async def add_request_middleware(request: Request, call_next):
         response = await call_next(request)
         response.headers["X-Process-Time"] = str(time.time() - start_time)
         if url_path not in log_excepts:
-            logger.log(request.url.path, response, tag=logger.tag.END)
+            logger.log(url_path, response, tag=logger.tag.END)
         return response
     except CustomHTTPException as e:
         response = JSONResponse(
@@ -100,7 +101,7 @@ async def add_request_middleware(request: Request, call_next):
             ),
         )
         if url_path not in log_excepts:
-            logger.log(request.url.path, response, tag=logger.tag.END)
+            logger.log(url_path, response, tag=logger.tag.END)
         return response
     except Exception as e:
         traceback.print_exc()
@@ -113,7 +114,7 @@ async def add_request_middleware(request: Request, call_next):
             content=jsonable_encoder({"status_code": 500, "msg": str(e)}),
         )
         if url_path not in log_excepts:
-            logger.log(request.url.path, response, tag=logger.tag.END)
+            logger.log(url_path, response, tag=logger.tag.END)
         return response
 
 
@@ -139,4 +140,10 @@ app.include_router(detect_router)
 app.include_router(account_router)
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=project_config.ALGO_PORT)
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=project_config.ALGO_PORT,
+        # ssl_keyfile=project_config.SSL_KEY,
+        # ssl_certfile=project_config.SSL_CERT,
+    )
