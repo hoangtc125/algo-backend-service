@@ -17,11 +17,9 @@ class NotificationService:
             new_connection=False,
         )
 
-    async def get_all(self, page_size: int = 20, page_number: int = None):
-        accounts = await self.notification_repo.get_all(
-            page_size=page_size, page_number=page_number
-        )
+    async def get_all(self, **kargs):
+        notifications = await self.notification_repo.get_all(**kargs)
         res = []
-        for doc_id, uv in accounts.items():
+        for doc_id, uv in notifications.items():
             res.append(to_response_dto(doc_id, uv, NotificationResponse))
         return res

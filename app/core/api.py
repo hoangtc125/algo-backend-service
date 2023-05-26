@@ -25,6 +25,7 @@ class AccountApi(BaseAPIModel):
     UPDATE_PROFILE = "/account/update"
     DISABLE_ACCOUNT = "/account/disable"
     UPDATE_PASSWORD = "/account/update-password"
+    NOTIFICATION = "/account/notification"
 
 
 ALLOW_ALL = ["*"]
@@ -38,6 +39,7 @@ API_PERMISSION = {
     AccountApi.GET_ALL: [Role.ADMIN, Role.USER],
     AccountApi.GET: [Role.ADMIN, Role.USER],
     AccountApi.UPDATE_PROFILE: [Role.ADMIN, Role.USER],
+    AccountApi.NOTIFICATION: [Role.ADMIN, Role.USER],
     AccountApi.DISABLE_ACCOUNT: [Role.ADMIN],
 }
 
@@ -54,6 +56,7 @@ def get_permissions(role: str):
         if accepted_role == ALLOW_ALL or role in accepted_role:
             lst_permissions.append(api)
     return lst_permissions
+
 
 if __name__ == "__main__":
     first_elements = set()  # Tạo một set để lưu trữ các phần tử duy nhất

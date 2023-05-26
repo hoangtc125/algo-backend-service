@@ -1,7 +1,7 @@
 import time
 import traceback
 import uvicorn
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.encoders import jsonable_encoder
@@ -15,8 +15,10 @@ from app.core.log import logger
 from app.core.constant import Queue
 from app.core.model import SocketPayload
 from app.core.terminal import server_info, services_info
+from app.model.notification import SocketNotification
 from app.router.detect import router as detect_router
 from app.router.account import router as account_router
+from app.util.model import get_dict
 from app.worker.socket import socket_worker
 from app.queue.rabbitmq import rabbitmq
 
@@ -72,13 +74,14 @@ async def add_request_middleware(request: Request, call_next):
     url_path = request.url.path
     log_excepts = ["/metrics"]
     if request.method == "OPTIONS":
-        return Response()
+        response = await call_next(request)
+        return response
     try:
         request_user = authentication(request)
         if url_path not in log_excepts:
             logger.log(request, request_user, tag=logger.tag.START)
         authorization(
-            path=request.url.path,
+            path=url_path,
             request_role=request_user.role,
             request_host=request.client.host,
             request=request,
@@ -86,7 +89,7 @@ async def add_request_middleware(request: Request, call_next):
         response = await call_next(request)
         response.headers["X-Process-Time"] = str(time.time() - start_time)
         if url_path not in log_excepts:
-            logger.log(request.url.path, response, tag=logger.tag.END)
+            logger.log(url_path, response, tag=logger.tag.END)
         return response
     except CustomHTTPException as e:
         response = JSONResponse(
@@ -100,7 +103,7 @@ async def add_request_middleware(request: Request, call_next):
             ),
         )
         if url_path not in log_excepts:
-            logger.log(request.url.path, response, tag=logger.tag.END)
+            logger.log(url_path, response, tag=logger.tag.END)
         return response
     except Exception as e:
         traceback.print_exc()
@@ -113,7 +116,7 @@ async def add_request_middleware(request: Request, call_next):
             content=jsonable_encoder({"status_code": 500, "msg": str(e)}),
         )
         if url_path not in log_excepts:
-            logger.log(request.url.path, response, tag=logger.tag.END)
+            logger.log(url_path, response, tag=logger.tag.END)
         return response
 
 
@@ -126,17 +129,25 @@ def docs():
 
 
 @app.post("/test/socket")
-def test_socket(socket_payload: SocketPayload):
-    socket_worker.push(socket_payload=socket_payload)
+def test_socket(socket_payload: SocketNotification):
+    socket_worker.push(socket_payload=SocketPayload(**get_dict(socket_payload)))
 
 
 @app.post("/test/rabbitmq")
-def test_rabbitmq(socket_payload: SocketPayload):
-    rabbitmq.send(queue_name=Queue.SOCKET, message=socket_payload)
+def test_rabbitmq(socket_payload: SocketNotification):
+    rabbitmq.send(
+        queue_name=Queue.SOCKET, message=SocketPayload(**get_dict(socket_payload))
+    )
 
 
 app.include_router(detect_router)
 app.include_router(account_router)
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=project_config.ALGO_PORT)
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=project_config.ALGO_PORT,
+        # ssl_keyfile=project_config.SSL_KEY,
+        # ssl_certfile=project_config.SSL_CERT,
+    )

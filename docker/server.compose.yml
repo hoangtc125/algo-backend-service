@@ -1,10 +1,11 @@
 version: '3.8'
 services:
   algo-server:
-    image: algo-server:latest
+    image: hoangtc125admin/algo:server
     ports:
       - 8001:8001
     volumes:
       - ./log:/algo/log
       - ../.env:/algo/.env
+      - ../resources/algo-firebase.json:/algo/resources/algo-firebase.json
     network_mode: "host" # to test locally running service

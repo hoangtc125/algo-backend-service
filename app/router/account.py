@@ -12,6 +12,7 @@ from app.core.api import AccountApi, get_permissions
 from app.core.config import project_config
 from app.core.log import logger
 from app.service.account import AccountService
+from app.service.notification import NotificationService
 from app.model.account import AccountCreate, Account
 from app.util.auth import get_actor_from_request
 from app.util.mail import make_mail_active_account
@@ -116,4 +117,23 @@ async def get_all(
 @router.get(AccountApi.ACTIVE, response_model=HttpResponse)
 async def active(id: str):
     result = await AccountService().active_algo_account(id)
+    return success_response(data=result)
+
+
+@router.post(AccountApi.NOTIFICATION, response_model=HttpResponse)
+async def get_notification(
+    page_size: int = 5,
+    page_number: int = 0,
+    query: Dict = {},
+    orderby: str = "created_at",
+    sort: SortOrder = Query(SortOrder.DESC),
+    token: str = Depends(oauth2_scheme),
+):
+    result = await NotificationService().get_all(
+        page_size=page_size,
+        page_number=page_number,
+        query=query,
+        orderby=orderby,
+        sort=sort.value,
+    )
     return success_response(data=result)

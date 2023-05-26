@@ -74,9 +74,7 @@ class AccountService:
             minutes=project_config.ACCESS_TOKEN_EXPIRE_MINUTES
         )
         confirmation_token = create_access_token(
-            TokenPayload(
-                username=account.email, role=account.role, expire_time=expire_time
-            )
+            TokenPayload(username=id, role=account.role, expire_time=expire_time)
         )
         socket_worker.push(
             SocketPayload(
