@@ -1,7 +1,7 @@
 import time
 import traceback
 import uvicorn
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.encoders import jsonable_encoder
@@ -15,8 +15,10 @@ from app.core.log import logger
 from app.core.constant import Queue
 from app.core.model import SocketPayload
 from app.core.terminal import server_info, services_info
+from app.model.notification import SocketNotification
 from app.router.detect import router as detect_router
 from app.router.account import router as account_router
+from app.util.model import get_dict
 from app.worker.socket import socket_worker
 from app.queue.rabbitmq import rabbitmq
 
@@ -127,13 +129,15 @@ def docs():
 
 
 @app.post("/test/socket")
-def test_socket(socket_payload: SocketPayload):
-    socket_worker.push(socket_payload=socket_payload)
+def test_socket(socket_payload: SocketNotification):
+    socket_worker.push(socket_payload=SocketPayload(**get_dict(socket_payload)))
 
 
 @app.post("/test/rabbitmq")
-def test_rabbitmq(socket_payload: SocketPayload):
-    rabbitmq.send(queue_name=Queue.SOCKET, message=socket_payload)
+def test_rabbitmq(socket_payload: SocketNotification):
+    rabbitmq.send(
+        queue_name=Queue.SOCKET, message=SocketPayload(**get_dict(socket_payload))
+    )
 
 
 app.include_router(detect_router)
