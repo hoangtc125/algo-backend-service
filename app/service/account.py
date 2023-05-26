@@ -4,7 +4,7 @@ from app.core.exception import CustomHTTPException
 from app.core.model import TokenPayload, SocketPayload
 from app.core.config import project_config
 from app.core.constant import Provider
-from app.model.account import Account, AccountCreate, AccountResponse
+from app.model.account import Account, AccountCreate, AccountResponse, PasswordUpdate
 from app.model.notification import Notification
 from app.repo.mongo import get_repo
 from app.util.model import get_dict, to_response_dto
@@ -111,6 +111,11 @@ class AccountService:
                 data=f"{check_account.email} has been joined from {check_account.provider} at {to_datestring(get_current_timestamp())}"
             )
         )
+        notification_worker.create(
+            Notification(
+                content=f"Welcome to Algo, {check_account.name}.", to=check_account.id
+            )
+        )
         return confirmation_token
 
     async def active_algo_account(self, id):
@@ -122,3 +127,14 @@ class AccountService:
         )
         notification_worker.create(Notification(content="Welcome to Algo", to=doc_id))
         return doc_id
+
+    async def reset_password(self, passwordUpdate: PasswordUpdate):
+        print(passwordUpdate)
+        account = await self.get_account({"_id": passwordUpdate.id})
+        if not account:
+            raise CustomHTTPException(error_type="account_not_exist")
+        res = await self.account_repo.update_by_id(
+            passwordUpdate.id,
+            {"hashed_password": get_hashed_password(passwordUpdate.password)},
+        )
+        return res

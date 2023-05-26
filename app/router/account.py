@@ -1,6 +1,7 @@
 from typing import Dict
 from fastapi import APIRouter, Depends, Query
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.responses import RedirectResponse
 from firebase_admin.auth import verify_id_token
 from firebase_admin._auth_utils import InvalidIdTokenError
 
@@ -13,9 +14,9 @@ from app.core.config import project_config
 from app.core.log import logger
 from app.service.account import AccountService
 from app.service.notification import NotificationService
-from app.model.account import AccountCreate, Account
+from app.model.account import AccountCreate, Account, PasswordUpdate
 from app.util.auth import get_actor_from_request
-from app.util.mail import make_mail_active_account
+from app.util.mail import make_mail_active_account, make_mail_reset_password
 from app.util.time import get_current_timestamp, to_datestring
 from app.util.mail import Email
 from app.worker.socket import socket_worker
@@ -62,7 +63,7 @@ async def register(account_create: AccountCreate):
             receiver_email=result.email,
             subject="Kích hoạt tài khoản ALGO",
             content=make_mail_active_account(
-                f"http://0.0.0.0:{project_config.ALGO_PORT}/account/active?id={result.id}"
+                f"http://{project_config.HOST}:{project_config.ALGO_PORT}/account/active?id={result.id}"
             ),
         )
     )
@@ -116,8 +117,10 @@ async def get_all(
 
 @router.get(AccountApi.ACTIVE, response_model=HttpResponse)
 async def active(id: str):
-    result = await AccountService().active_algo_account(id)
-    return success_response(data=result)
+    await AccountService().active_algo_account(id)
+    return RedirectResponse(
+        url=f"http://{project_config.HOST}:{project_config.FRONTEND_PORT}/login"
+    )
 
 
 @router.post(AccountApi.NOTIFICATION, response_model=HttpResponse)
@@ -137,3 +140,26 @@ async def get_notification(
         sort=sort.value,
     )
     return success_response(data=result)
+
+
+@router.get(AccountApi.RESET_PASSWORD, response_model=HttpResponse)
+async def send_mail_reset(email: str):
+    account = await AccountService().get_account({"email": email})
+    if not account:
+        raise CustomHTTPException(error_type="account_not_exist")
+    mail_worker.push(
+        Email(
+            receiver_email=email,
+            subject="Thông báo đặt lại mật khẩu",
+            content=make_mail_reset_password(
+                f"http://{project_config.HOST}:{project_config.FRONTEND_PORT}/reset-password?_id={account.id}"
+            ),
+        )
+    )
+    return success_response()
+
+
+@router.post(AccountApi.RESET_PASSWORD, response_model=HttpResponse)
+async def reset_password(passwordUpdate: PasswordUpdate):
+    res = await AccountService().reset_password(passwordUpdate)
+    return success_response(data=res)

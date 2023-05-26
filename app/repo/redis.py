@@ -6,7 +6,7 @@ from app.core.config import project_config
 class RedisConnection:
     def __init__(self):
         try:
-            self.connection = redis.Redis(host=project_config.REDIS_HOST, port=6379)
+            self.connection = redis.Redis(host=project_config.HOST, port=6379)
             response = self.connection.ping()
             if response:
                 print(f"Connect to Redis")

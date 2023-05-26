@@ -175,6 +175,27 @@ def make_mail_active_account(url):
     )
 
 
+def make_mail_reset_password(url):
+    return (
+        EmailContent()
+        .h4("Chào bạn,")
+        .p(
+            "Bạn nhận được email này vì yêu cầu đặt lại mật khẩu của bạn đã được gửi đến chúng tôi. Để hoàn tất quá trình đặt lại mật khẩu, vui lòng nhấp vào liên kết bên dưới:"
+        )
+        .a(url, "Liên kết đặt lại mật khẩu")
+        .p(
+            "Nếu bạn gặp bất kỳ vấn đề hoặc câu hỏi nào, vui lòng liên hệ với chúng tôi qua: "
+        )
+        .a("https://chinhphu.vn/", "Thông tin liên hệ")
+        .p(
+            "Cảm ơn bạn đã tham gia và chúc bạn có trải nghiệm tuyệt vời trên hệ thống của chúng tôi!"
+        )
+        .p("Trân trọng,")
+        .p("Ban quản trị.")
+        .make_html()
+    )
+
+
 def make_mail_welcome():
     return (
         EmailContent()

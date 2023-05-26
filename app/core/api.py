@@ -26,12 +26,14 @@ class AccountApi(BaseAPIModel):
     DISABLE_ACCOUNT = "/account/disable"
     UPDATE_PASSWORD = "/account/update-password"
     NOTIFICATION = "/account/notification"
+    RESET_PASSWORD = "/account/reset-password"
 
 
 ALLOW_ALL = ["*"]
 
 API_PERMISSION = {
     AccountApi.LOGIN: ALLOW_ALL,
+    AccountApi.RESET_PASSWORD: ALLOW_ALL,
     AccountApi.LOGIN_FIREBASE: ALLOW_ALL,
     AccountApi.REGISTER: ALLOW_ALL,
     AccountApi.ABOUT_ME: [Role.ADMIN, Role.USER],

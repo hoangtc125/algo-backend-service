@@ -36,8 +36,8 @@ class AccountResponse(Account):
 
 
 class PasswordUpdate(BaseModel):
-    old_password: str
-    new_password: str
+    id: str
+    password: str
 
 
 if __name__ == "__main__":
