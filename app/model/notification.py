@@ -2,6 +2,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
+from app.core.constant import NotiKind
 from app.core.model import BaseAuditModel
 
 
@@ -10,6 +11,7 @@ class Notification(BaseAuditModel):
     link: Optional[str] = None
     to: str
     seen: Optional[bool] = False
+    kind: Optional[str] = NotiKind.INFO
 
 
 class NotificationResponse(Notification):

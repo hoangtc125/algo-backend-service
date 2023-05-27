@@ -5,7 +5,7 @@ from fastapi.responses import RedirectResponse
 from firebase_admin.auth import verify_id_token
 from firebase_admin._auth_utils import InvalidIdTokenError
 
-from app.core.constant import Provider, SortOrder
+from app.core.constant import NotiKind, Provider, SortOrder
 from app.core.exception import CustomHTTPException
 from app.core.model import HttpResponse, SocketPayload, success_response
 from app.core.oauth2 import CustomOAuth2PasswordBearer
@@ -20,7 +20,7 @@ from app.service.detect import (
     make_card_hust,
 )
 from app.service.notification import NotificationService
-from app.model.account import AccountCreate, Account, PasswordUpdate
+from app.model.account import AccountCreate, Account, PasswordReset, PasswordUpdate
 from app.model.notification import Notification, SocketNotification
 from app.util.auth import get_actor_from_request
 from app.util.mail import (
@@ -179,8 +179,18 @@ async def send_mail_reset(email: str):
 
 
 @router.post(AccountApi.RESET_PASSWORD, response_model=HttpResponse)
-async def reset_password(passwordUpdate: PasswordUpdate):
-    res = await AccountService().reset_password(passwordUpdate)
+async def reset_password(passwordReset: PasswordReset):
+    res = await AccountService().reset_password(passwordReset)
+    return success_response(data=res)
+
+
+@router.post(AccountApi.UPDATE_PASSWORD, response_model=HttpResponse)
+async def update_password(
+    passwordUpdate: PasswordUpdate,
+    token: str = Depends(oauth2_scheme),
+    actor=Depends(get_actor_from_request),
+):
+    res = await AccountService().update_password(actor, passwordUpdate)
     return success_response(data=res)
 
 
@@ -218,7 +228,9 @@ async def request_verify(
         )
     )
     notification = Notification(
-        content=f"A link to verify your account has been sent to {card.email}", to=actor
+        content=f"A link to verify your account has been sent to {card.email}",
+        to=actor,
+        kind=NotiKind.SUCCESS,
     )
     socket_worker.push(
         SocketPayload(

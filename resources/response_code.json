@@ -55,6 +55,14 @@
         "account_not_exist": {
             "code": 5000,
             "message": "Tài khoản không tồn tại"
+        },
+        "password_miss_match": {
+            "code": 5001,
+            "message": "Mật khẩu cũ không chính xác"
+        },
+        "account_not_allowed": {
+            "code": 5002,
+            "message": "Tài khoản không thể thực hiện tính năng này"
         }
     }
 }

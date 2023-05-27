@@ -15,6 +15,13 @@ class Provider:
     FIREBASE = "FIREBASE"
 
 
+class NotiKind:
+    INFO = "INFO"
+    SUCCESS = "SUCCESS"
+    ERROR = "ERROR"
+    WARNING = "WARNING"
+
+
 class DateTime:
     DATE_FORMAT: str = "%Y-%m-%d"
     DATETIME_FORMAT: str = "%Y-%m-%d %H:%M:%S"

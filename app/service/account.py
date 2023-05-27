@@ -3,9 +3,15 @@ from typing import Dict
 from app.core.exception import CustomHTTPException
 from app.core.model import TokenPayload, SocketPayload
 from app.core.config import project_config
-from app.core.constant import Provider
-from app.model.account import Account, AccountCreate, AccountResponse, PasswordUpdate
-from app.model.notification import Notification
+from app.core.constant import NotiKind, Provider
+from app.model.account import (
+    Account,
+    AccountCreate,
+    AccountResponse,
+    PasswordReset,
+    PasswordUpdate,
+)
+from app.model.notification import Notification, SocketNotification
 from app.repo.mongo import get_repo
 from app.util.model import get_dict, to_response_dto
 from app.util.time import get_current_timestamp, get_timestamp_after, to_datestring
@@ -83,7 +89,9 @@ class AccountService:
             )
         )
         notification_worker.create(
-            Notification(content=f"Welcome to Algo, {account.name}.", to=id)
+            Notification(
+                content=f"Welcome to Algo, {account.name}.", to=id, kind=NotiKind.INFO
+            )
         )
         return confirmation_token
 
@@ -114,7 +122,9 @@ class AccountService:
         )
         notification_worker.create(
             Notification(
-                content=f"Welcome to Algo, {check_account.name}.", to=check_account.id
+                content=f"Welcome to Algo, {check_account.name}.",
+                to=check_account.id,
+                kind=NotiKind.INFO,
             )
         )
         return confirmation_token
@@ -129,7 +139,9 @@ class AccountService:
                 data=f"Account {token_payload.username} has been actived  at {to_datestring(get_current_timestamp())}"
             )
         )
-        notification_worker.create(Notification(content="Welcome to Algo", to=doc_id))
+        notification_worker.create(
+            Notification(content="Welcome to Algo", to=doc_id, kind=NotiKind.INFO)
+        )
         return doc_id
 
     def make_token(self, id: str, time: int = 15):
@@ -142,14 +154,14 @@ class AccountService:
         ).token
         return token
 
-    async def reset_password(self, passwordUpdate: PasswordUpdate):
-        token_payload = get_token_payload(passwordUpdate.token)
+    async def reset_password(self, passwordReset: PasswordReset):
+        token_payload = get_token_payload(passwordReset.token)
         account = await self.get_account({"_id": token_payload.username})
         if not account:
             raise CustomHTTPException(error_type="account_not_exist")
         res = await self.account_repo.update_by_id(
             token_payload.username,
-            {"hashed_password": get_hashed_password(passwordUpdate.password)},
+            {"hashed_password": get_hashed_password(passwordReset.password)},
         )
         return res
 
@@ -159,6 +171,35 @@ class AccountService:
             token_payload.username, {"verify": {"status": True}}
         )
         notification_worker.create(
-            Notification(content="Your account has been verified", to=doc_id)
+            Notification(
+                content="Your account has been verified",
+                to=doc_id,
+                kind=NotiKind.SUCCESS,
+            )
         )
         return doc_id
+
+    async def update_password(self, id, passwordUpdate: PasswordUpdate):
+        check_account = await self.get_account({"_id": id})
+        if not check_account:
+            raise CustomHTTPException(error_type="account_not_exist")
+        if check_account.created_by == Provider.FIREBASE:
+            raise CustomHTTPException(error_type="account_not_allowed")
+        if not verify_password(passwordUpdate.password, check_account.hashed_password):
+            raise CustomHTTPException(error_type="password_miss_match")
+        res = await self.account_repo.update_by_id(
+            id,
+            {"hashed_password": get_hashed_password(passwordUpdate.newpassword)},
+        )
+        notification = Notification(
+            content=f"Password has been changed successfull",
+            to=id,
+            kind=NotiKind.SUCCESS,
+        )
+        socket_worker.push(
+            SocketPayload(
+                **get_dict(SocketNotification(client_id=id, data=notification))
+            )
+        )
+        notification_worker.create(notification)
+        return res
