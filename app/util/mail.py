@@ -125,7 +125,7 @@ def send_mail(email: Email):
         server.quit()
 
 
-def make_mail_content_card(card: Dict):
+def make_mail_verify_account(card: Dict, url: str):
     return (
         EmailContent()
         .h4("Chào bạn,")
@@ -136,7 +136,7 @@ def make_mail_content_card(card: Dict):
         .p(
             "Hãy kiểm tra lại thông tin và xác nhận bằng cách click vào đường link sau: "
         )
-        .a("https://chinhphu.vn/", "Đồng ý xác thực tài khoản")
+        .a(url, "Đồng ý xác thực tài khoản")
         .p("Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi.")
         .p("Trân trọng,")
         .p("Ban quản trị.")
@@ -162,6 +162,27 @@ def make_mail_active_account(url):
         .p(
             "Nếu bạn không thực hiện việc kích hoạt này, tài khoản của bạn sẽ không hoạt động và sẽ bị xóa sau một khoảng thời gian nhất định."
         )
+        .p(
+            "Nếu bạn gặp bất kỳ vấn đề hoặc câu hỏi nào, vui lòng liên hệ với chúng tôi qua: "
+        )
+        .a("https://chinhphu.vn/", "Thông tin liên hệ")
+        .p(
+            "Cảm ơn bạn đã tham gia và chúc bạn có trải nghiệm tuyệt vời trên hệ thống của chúng tôi!"
+        )
+        .p("Trân trọng,")
+        .p("Ban quản trị.")
+        .make_html()
+    )
+
+
+def make_mail_reset_password(url):
+    return (
+        EmailContent()
+        .h4("Chào bạn,")
+        .p(
+            "Bạn nhận được email này vì yêu cầu đặt lại mật khẩu của bạn đã được gửi đến chúng tôi. Để hoàn tất quá trình đặt lại mật khẩu, vui lòng nhấp vào liên kết bên dưới:"
+        )
+        .a(url, "Liên kết đặt lại mật khẩu")
         .p(
             "Nếu bạn gặp bất kỳ vấn đề hoặc câu hỏi nào, vui lòng liên hệ với chúng tôi qua: "
         )

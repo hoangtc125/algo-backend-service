@@ -20,10 +20,11 @@ class ProjectConfig(BaseSettings):
     SECURITY_ALGORITHM = getenv("SECURITY_ALGORITHM")
     MONGO_URL = getenv("MONGO_URL")
     ALGO_PORT = int(getenv("ALGO_PORT", 8001))
+    FRONTEND_PORT = int(getenv("FRONTEND_PORT", 5173))
     MAIL_USER = str(getenv("MAIL_USER", ""))
     MAIL_PASS = str(getenv("MAIL_PASS", ""))
+    HOST = str(getenv("HOST", ""))
     RABBITMQ_URL = str(getenv("RABBITMQ_URL", ""))
-    REDIS_HOST = str(getenv("REDIS_HOST", ""))
     ENABLE_METRICS = os.getenv("ENABLE_METRICS", "True").lower() in ("true", "1", "t")
     ENABLE_LOGGING = os.getenv("ENABLE_LOGGING", "True").lower() in ("true", "1", "t")
     ENABLE_HTTPS = os.getenv("ENABLE_HTTPS", "True").lower() in ("true", "1", "t")
@@ -33,6 +34,7 @@ class ProjectConfig(BaseSettings):
     LOG_DIR = BASE_DIR + r"/log"
     SSL_KEY = BASE_DIR + r"/ssl/key.pem" if ENABLE_HTTPS else ""
     SSL_CERT = BASE_DIR + r"/ssl/certificate.pem" if ENABLE_HTTPS else ""
+    VISION_CONFIG_PATH = BASE_DIR + r"/resources/cclub-cloud-vision-api.json"
     LOG_TIME_OUT = 10
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
 

@@ -57,4 +57,5 @@ services:
       - ./log:/algo/log
       - ../.env:/algo/.env
       - ../resources/algo-firebase.json:/algo/resources/algo-firebase.json
+      - ../resources/cclub-cloud-vision-api.json:/algo/resources/cclub-cloud-vision-api.json
     network_mode: "host"

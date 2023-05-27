@@ -16,6 +16,30 @@
             "code": 1002,
             "message": "Không có quyền truy cập"
         },
+        "detect_not_support": {
+            "code": 2000,
+            "message": "Hệ thống chưa hộ trợ thẻ này"
+        },
+        "detect_invalid": {
+            "code": 2001,
+            "message": "Chưa nhận diện đủ thông tin"
+        },
+        "detect_out_of_date": {
+            "code": 2002,
+            "message": "Thẻ đã hết hạn sử dụng"
+        },
+        "detect_info_failure": {
+            "code": 2003,
+            "message": "Không nhận diện được"
+        },
+        "detect_barcode_failure": {
+            "code": 2004,
+            "message": "Không nhận diện được barcode"
+        },
+        "cam_timeout": {
+            "code": 3000,
+            "message": "Camera Timeout"
+        },
         "mail_invalid": {
             "code": 4000,
             "message": "Email không hợp lệ"
