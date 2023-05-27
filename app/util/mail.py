@@ -125,7 +125,7 @@ def send_mail(email: Email):
         server.quit()
 
 
-def make_mail_content_card(card: Dict):
+def make_mail_verify_account(card: Dict, url: str):
     return (
         EmailContent()
         .h4("Chào bạn,")
@@ -136,7 +136,7 @@ def make_mail_content_card(card: Dict):
         .p(
             "Hãy kiểm tra lại thông tin và xác nhận bằng cách click vào đường link sau: "
         )
-        .a("https://chinhphu.vn/", "Đồng ý xác thực tài khoản")
+        .a(url, "Đồng ý xác thực tài khoản")
         .p("Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi.")
         .p("Trân trọng,")
         .p("Ban quản trị.")

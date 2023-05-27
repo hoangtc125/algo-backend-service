@@ -18,5 +18,5 @@ class NotificationResponse(Notification):
 
 class SocketNotification(BaseModel):
     client_id: str = None
-    channel: str = "system"
+    channel: str = "notification"
     data: Notification = None

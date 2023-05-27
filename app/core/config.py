@@ -34,6 +34,7 @@ class ProjectConfig(BaseSettings):
     LOG_DIR = BASE_DIR + r"/log"
     SSL_KEY = BASE_DIR + r"/ssl/key.pem" if ENABLE_HTTPS else ""
     SSL_CERT = BASE_DIR + r"/ssl/certificate.pem" if ENABLE_HTTPS else ""
+    VISION_CONFIG_PATH = BASE_DIR + r"/resources/cclub-cloud-vision-api.json"
     LOG_TIME_OUT = 10
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
 

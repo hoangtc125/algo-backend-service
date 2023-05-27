@@ -10,4 +10,5 @@ log
 .vscode
 .metals
 algo-firebase.json
+cclub-cloud-vision-api.json
 *.pem
