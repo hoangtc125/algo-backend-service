@@ -4,9 +4,9 @@ WORKDIR /algo
 
 COPY . /algo/
 
-RUN pip install --upgrade wheel pip setuptools
-RUN pip install -r requirements.txt
-RUN apt-get install zbar-tools
+RUN pip install --upgrade wheel pip setuptools && \
+    pip install -r requirements.txt && \
+    apt-get update && apt-get install -y zbar-tools
 
 EXPOSE 8001
 
