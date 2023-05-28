@@ -170,13 +170,24 @@ class AccountService:
         doc_id = await self.account_repo.update_by_id(
             token_payload.username, {"verify": {"status": True}}
         )
-        notification_worker.create(
-            Notification(
-                content="Your account has been verified",
-                to=doc_id,
-                kind=NotiKind.SUCCESS,
+        notification = Notification(
+            content="Your account has been verified",
+            to=doc_id,
+            kind=NotiKind.SUCCESS,
+        )
+        socket_worker.push(
+            SocketPayload(
+                **get_dict(
+                    SocketNotification(client_id=doc_id, data=None, channel="verify")
+                )
             )
         )
+        socket_worker.push(
+            SocketPayload(
+                **get_dict(SocketNotification(client_id=doc_id, data=notification))
+            )
+        )
+        notification_worker.create(notification)
         return doc_id
 
     async def update_password(self, id, passwordUpdate: PasswordUpdate):

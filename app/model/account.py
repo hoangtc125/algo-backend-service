@@ -12,6 +12,13 @@ class BaseAccount(BaseModel):
     verify: Optional[dict] = {
         "status": False,
         "type": None,
+        "image": {
+            "uid": "",
+            "name": "",
+            "status": "",
+            "url": "",
+            "type": "",
+        },
         "detail": {
             "school": "",
             "major": "",

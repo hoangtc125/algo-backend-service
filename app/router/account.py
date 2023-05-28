@@ -202,19 +202,26 @@ async def verify(token: str):
 
 @router.post(AccountApi.VERIFY, response_model=HttpResponse)
 async def request_verify(
-    image_bytes: str = None,
+    data: Dict,
     token: str = Depends(oauth2_scheme),
     actor=Depends(get_actor_from_request),
 ):
-    file_path = r"/home/hoangtc125/Downloads/20194060-Trần Công Hoàng.jpg"
-    image_base64 = file_to_base64(file_path)
+    image_base64 = str(data["url"]).split("base64,")[1]
     info_list = detect_text_from_base64(image_base64)
     code_list = detect_code_from_base64(image_base64)
     card = make_card_hust(info_list)
     if card.number not in code_list:
         raise CustomHTTPException(error_type="detect_barcode_failure")
     await AccountService().account_repo.update_by_id(
-        actor, {"verify": {"status": False, "type": "HUST", "detail": card.__dict__}}
+        actor,
+        {
+            "verify": {
+                "status": False,
+                "type": "HUST",
+                "detail": card.__dict__,
+                "image": data,
+            },
+        },
     )
     token = AccountService().make_token(actor)
     mail_worker.push(
