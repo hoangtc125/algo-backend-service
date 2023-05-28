@@ -36,3 +36,11 @@ class SortOrder(str, Enum):
 class Queue:
     NOTIFICATION = "notification"
     SOCKET = "socket"
+
+
+class School(str, Enum):
+    HUST = "HUST"
+    HUST2 = "HUST2"
+    HUCE = "HUCE"
+    NEU = "NEU"
+    NEU2 = "NEU2"

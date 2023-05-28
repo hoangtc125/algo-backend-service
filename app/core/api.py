@@ -30,6 +30,10 @@ class AccountApi(BaseAPIModel):
     VERIFY = "/account/verify"
 
 
+class ImageApi(BaseAPIModel):
+    GET = "/image/get"
+
+
 ALLOW_ALL = ["*"]
 
 API_PERMISSION = {
@@ -45,6 +49,7 @@ API_PERMISSION = {
     AccountApi.UPDATE_PROFILE: [Role.ADMIN, Role.USER],
     AccountApi.NOTIFICATION: [Role.ADMIN, Role.USER],
     AccountApi.DISABLE_ACCOUNT: [Role.ADMIN],
+    ImageApi.GET: ALLOW_ALL,
 }
 
 WHITE_LIST_PATH = [

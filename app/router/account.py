@@ -5,7 +5,7 @@ from fastapi.responses import RedirectResponse
 from firebase_admin.auth import verify_id_token
 from firebase_admin._auth_utils import InvalidIdTokenError
 
-from app.core.constant import NotiKind, Provider, SortOrder
+from app.core.constant import NotiKind, Provider, School, SortOrder
 from app.core.exception import CustomHTTPException
 from app.core.model import HttpResponse, SocketPayload, success_response
 from app.core.oauth2 import CustomOAuth2PasswordBearer
@@ -14,12 +14,16 @@ from app.core.config import project_config
 from app.core.log import logger
 from app.service.account import AccountService
 from app.service.detect import (
-    detect_code_from_base64,
     detect_text_from_base64,
-    file_to_base64,
+    make_card_huce,
     make_card_hust,
+    make_card_hust2,
+    make_card_neu,
+    make_card_neu2,
 )
+from app.service.image import ImageService
 from app.service.notification import NotificationService
+from app.model.image import Image
 from app.model.account import AccountCreate, Account, PasswordReset, PasswordUpdate
 from app.model.notification import Notification, SocketNotification
 from app.util.auth import get_actor_from_request
@@ -202,24 +206,32 @@ async def verify(token: str):
 
 @router.post(AccountApi.VERIFY, response_model=HttpResponse)
 async def request_verify(
-    data: Dict,
+    image: Image,
+    school: School = Query(...),
     token: str = Depends(oauth2_scheme),
     actor=Depends(get_actor_from_request),
 ):
-    image_base64 = str(data["url"]).split("base64,")[1]
+    image_base64 = str(image.url).split("base64,")[1]
     info_list = detect_text_from_base64(image_base64)
-    code_list = detect_code_from_base64(image_base64)
-    card = make_card_hust(info_list)
-    if card.number not in code_list:
-        raise CustomHTTPException(error_type="detect_barcode_failure")
+    if school == School.HUST.value:
+        card = make_card_hust(info_list)
+    if school == School.HUST2.value:
+        card = make_card_hust2(info_list)
+    elif school == School.HUCE.value:
+        card = make_card_huce(info_list)
+    elif school == School.NEU.value:
+        card = make_card_neu(info_list)
+    elif school == School.NEU2.value:
+        card = make_card_neu2(info_list)
+    await ImageService().save(image)
     await AccountService().account_repo.update_by_id(
         actor,
         {
             "verify": {
                 "status": False,
-                "type": "HUST",
+                "type": school,
                 "detail": card.__dict__,
-                "image": data,
+                "image": image.uid,
             },
         },
     )
