@@ -119,7 +119,7 @@ class CardHUST2(Card):
             "school": "HANOI UNIVERSITY OF SCIENCE AND TECHNOLOGY",
             "fullname": "Họ tên / Name",
             "birth": "Ngày sinh / D.O.B",
-            "expired_card": "Giá trị đến / Valid Thru",
+            "expired_card": "Giá trị đến / Valid Until",
             "number": "MSSV / ID No.",
         }
 
