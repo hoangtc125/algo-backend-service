@@ -139,7 +139,7 @@ async def get_all(
 async def active(token: str):
     await AccountService().active_algo_account(token)
     return RedirectResponse(
-        url=f"http://{project_config.HOST}:{project_config.FRONTEND_PORT}/login"
+        url=f"http://{project_config.HOST}:{project_config.FRONTEND_PORT}/login#active"
     )
 
 
@@ -201,7 +201,9 @@ async def update_password(
 @router.get(AccountApi.VERIFY, response_model=HttpResponse)
 async def verify(token: str):
     await AccountService().verify_account(token)
-    return success_response()
+    return RedirectResponse(
+        url=f"http://{project_config.HOST}:{project_config.FRONTEND_PORT}/login#verify"
+    )
 
 
 @router.post(AccountApi.VERIFY, response_model=HttpResponse)
