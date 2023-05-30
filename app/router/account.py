@@ -139,7 +139,7 @@ async def get_all(
 async def active(token: str):
     await AccountService().active_algo_account(token)
     return RedirectResponse(
-        url=f"http://{project_config.HOST}:{project_config.FRONTEND_PORT}/login#active"
+        url=f"http://{project_config.HOST}:{project_config.FRONTEND_PORT}/algo/login#active"
     )
 
 
@@ -175,7 +175,7 @@ async def send_mail_reset(email: str):
             receiver_email=email,
             subject="Thông báo đặt lại mật khẩu",
             content=make_mail_reset_password(
-                f"http://{project_config.HOST}:{project_config.FRONTEND_PORT}/reset-password?token={token}"
+                f"http://{project_config.HOST}:{project_config.FRONTEND_PORT}/algo/reset-password?token={token}"
             ),
         )
     )
@@ -202,7 +202,7 @@ async def update_password(
 async def verify(token: str):
     await AccountService().verify_account(token)
     return RedirectResponse(
-        url=f"http://{project_config.HOST}:{project_config.FRONTEND_PORT}/login#verify"
+        url=f"http://{project_config.HOST}:{project_config.FRONTEND_PORT}/algo/login#verify"
     )
 
 
