@@ -29,5 +29,8 @@ class ImageService:
         return res
 
     async def save(self, image: Image):
-        doc_id = await self.image_repo.insert(image, image.uid)
-        return doc_id
+        try:
+            doc_id = await self.image_repo.insert(image, image.uid)
+            return doc_id
+        except:
+            pass
