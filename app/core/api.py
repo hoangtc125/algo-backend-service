@@ -30,6 +30,10 @@ class AccountApi(BaseAPIModel):
     VERIFY = "/account/verify"
 
 
+class ClusterApi(BaseAPIModel):
+    VECTORIZE = "/cluster/vectorize"
+
+
 class ImageApi(BaseAPIModel):
     GET = "/image/get"
 
@@ -49,6 +53,7 @@ API_PERMISSION = {
     AccountApi.UPDATE_PROFILE: [Role.ADMIN, Role.USER],
     AccountApi.NOTIFICATION: [Role.ADMIN, Role.USER],
     AccountApi.DISABLE_ACCOUNT: [Role.ADMIN],
+    ClusterApi.VECTORIZE: ALLOW_ALL,
     ImageApi.GET: ALLOW_ALL,
 }
 

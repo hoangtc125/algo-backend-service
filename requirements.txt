@@ -30,3 +30,11 @@ google-api-python-client==2.86.0
 opencv-python==4.7.0.72
 numpy==1.24.2
 pyzbar==0.1.9
+transformers==4.28.1
+sentencepiece==0.1.98
+underthesea==6.2.0
+gensim==4.3.1
+pandas==2.0.0
+matplotlib==3.7.1
+torch==2.0.0
+unidecode==1.3.6
