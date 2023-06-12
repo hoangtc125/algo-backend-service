@@ -34,7 +34,7 @@ async def get_all_club(
     orderby: str = "created_at",
     sort: SortOrder = Query(SortOrder.DESC),
 ):
-    result = await ClubService().get_all(
+    result = await ClubService().get_all_club(
         page_size=page_size,
         page_number=page_number,
         query=query,
@@ -50,8 +50,10 @@ async def create_club(
     token: str = Depends(oauth2_scheme),
     actor: str = Depends(get_actor_from_request),
 ):
-    club = await ClubService().create_algo_club(club_create)
-    member = ClubMembership(club_id=club.id, user_id=actor, role=ClubRole.PRESIDENT)
+    club, admin_group_id = await ClubService().create_algo_club(club_create)
+    member = ClubMembership(
+        club_id=club.id, user_id=actor, role=ClubRole.PRESIDENT, group_id=admin_group_id
+    )
     follower = ClubFollower(club_id=club.id, user_id=actor)
     await ClubService().create_algo_member(member)
     await ClubService().create_algo_follower(follower)
@@ -107,7 +109,7 @@ async def get_all_group(
     orderby: str = "created_at",
     sort: SortOrder = Query(SortOrder.DESC),
 ):
-    result = await ClubService().get_all(
+    result = await ClubService().get_all_group(
         page_size=page_size,
         page_number=page_number,
         query=query,
@@ -171,7 +173,7 @@ async def get_all_member(
     orderby: str = "created_at",
     sort: SortOrder = Query(SortOrder.DESC),
 ):
-    result = await ClubService().get_all(
+    result = await ClubService().get_all_member(
         page_size=page_size,
         page_number=page_number,
         query=query,
@@ -210,6 +212,37 @@ async def update_member(
 async def delete_member(
     member_id: str,
     member_update: Dict,
+    token: str = Depends(oauth2_scheme),
+    actor: str = Depends(get_actor_from_request),
+):
+    pass
+
+
+# ==========================================================
+
+
+@router.post(ClubApi.FOLLOW_GETALL, response_model=HttpResponse)
+async def get_all_follow(
+    page_size: int = 20,
+    page_number: int = None,
+    query: Dict = {},
+    orderby: str = "created_at",
+    sort: SortOrder = Query(SortOrder.DESC),
+):
+    result = await ClubService().get_all_follow(
+        page_size=page_size,
+        page_number=page_number,
+        query=query,
+        orderby=orderby,
+        sort=sort.value,
+    )
+    return success_response(data=result)
+
+
+@router.put(ClubApi.FOLLOW_UPDATE, response_model=HttpResponse)
+async def update_follow(
+    follow_id: str,
+    follow_update: Dict,
     token: str = Depends(oauth2_scheme),
     actor: str = Depends(get_actor_from_request),
 ):

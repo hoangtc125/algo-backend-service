@@ -73,3 +73,12 @@ class ClubGroup:
     HAU_CAN: str = "HAU_CAN"
     DOI_NGOAI: str = "DOI_NGOAI"
     TRUYEN_THONG: str = "TRUYEN_THONG"
+
+
+class ClubType:
+    EDU: str = "EDU>"
+
+
+class GroupType:
+    TEMP: str = "TEMP"
+    PERMANANT: str = "PERMANANT"

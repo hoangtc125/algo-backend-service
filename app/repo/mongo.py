@@ -1,7 +1,7 @@
 import traceback
 import inspect
 from motor.motor_asyncio import AsyncIOMotorClient
-from typing import TypeVar, Dict
+from typing import List, TypeVar, Dict
 from uuid import uuid4
 
 from app.core.constant import SortOrder
@@ -119,6 +119,16 @@ class BaseRepository:
             {"_id": _id, "_source": get_dict(obj)}
         )
         return str(result.inserted_id)
+
+    async def insert_many(self, data: List):
+        req = []
+        for item in data:
+            obj = item.get("obj")
+            custom_id = item.get("custom_id")
+            _id = custom_id if custom_id else str(uuid4())
+            req.append({"_id": _id, "_source": get_dict(obj)})
+        result = await self.collection.insert_many(req)
+        return result.inserted_ids
 
     async def update(self, query: Dict, obj: Dict):
         query = make_query(query)

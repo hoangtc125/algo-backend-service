@@ -48,7 +48,7 @@ class ClubService:
         id, club = res
         return to_response_dto(id, club, ClubResponse)
 
-    async def get_all(self, **kargs):
+    async def get_all_club(self, **kargs):
         clubs = await self.club_repo.get_all(**kargs)
         res = []
         for doc_id, uv in clubs.items():
@@ -57,7 +57,10 @@ class ClubService:
 
     async def create_algo_club(self, club: Club) -> ClubResponse:
         inserted_id = await self.club_repo.insert(club)
-        return to_response_dto(inserted_id, club, ClubResponse)
+        for i in range(len(GroupDefault)):
+            GroupDefault[i]["obj"].club_id = inserted_id
+        groups_id = await self.group_repo.insert_many(GroupDefault)
+        return (to_response_dto(inserted_id, club, ClubResponse), str(groups_id[0]))
 
     async def delete_algo_club(self, club_id: str, actor: str):
         club = await self.get_club({"_id": club_id})
@@ -93,12 +96,39 @@ class ClubService:
 
     # ========================================================
 
+    async def get_group(self, query: Dict):
+        res = await self.group_repo.get_one(query)
+        if not res:
+            return None
+        id, group = res
+        return to_response_dto(id, group, GroupResponse)
+
+    async def get_all_group(self, **kargs):
+        groups = await self.group_repo.get_all(**kargs)
+        res = []
+        for doc_id, uv in groups.items():
+            res.append(to_response_dto(doc_id, uv, GroupResponse))
+        return res
+
+    async def create_algo_group(self, group: Group) -> GroupResponse:
+        inserted_id = await self.group_repo.insert(group)
+        return to_response_dto(inserted_id, group, GroupResponse)
+
+    # ========================================================
+
     async def get_member(self, query: Dict):
         res = await self.member_repo.get_one(query)
         if not res:
             return None
         id, member = res
         return to_response_dto(id, member, ClubMembershipResponse)
+
+    async def get_all_member(self, **kargs):
+        members = await self.member_repo.get_all(**kargs)
+        res = []
+        for doc_id, uv in members.items():
+            res.append(to_response_dto(doc_id, uv, ClubMembershipResponse))
+        return res
 
     async def create_algo_member(self, member: ClubMembership):
         inserted_id = await self.member_repo.insert(member)
@@ -109,3 +139,10 @@ class ClubService:
     async def create_algo_follower(self, follower: ClubFollower):
         inserted_id = await self.follow_repo.insert(follower)
         return to_response_dto(inserted_id, follower, ClubFollowerResponse)
+
+    async def get_all_follow(self, **kargs):
+        follows = await self.follow_repo.get_all(**kargs)
+        res = []
+        for doc_id, uv in follows.items():
+            res.append(to_response_dto(doc_id, uv, ClubFollowerResponse))
+        return res
