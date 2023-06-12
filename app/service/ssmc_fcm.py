@@ -1,3 +1,5 @@
+import io
+import base64
 import sys
 import math
 import traceback
@@ -7,6 +9,10 @@ import matplotlib.pyplot as plt
 from enum import Enum
 from scipy.spatial.distance import cdist
 from typing import Optional, List, Union
+
+from app.core.config import project_config
+from app.worker.socket import SocketPayload, socket_worker
+from app.util.time import get_current_timestamp
 
 
 class NormMode(Enum):
@@ -33,7 +39,7 @@ class SSMC_FCM:
         self.dataset = np.array(dataset)
         self.fields_len = fields_len
         self.fields_weight = fields_weight if fields_weight else [1] * len(fields_len)
-        self.n_clusters = max([n_clusters, len(supervised_set)])
+        self.n_clusters = len(supervised_set)
         self.identity = identity if identity else [i for i in range(len(dataset))]
         self.supervised_set = [
             [self.identity.index(j) for j in i] for i in supervised_set
@@ -53,10 +59,21 @@ class SSMC_FCM:
         self.Dij = None
         self.distance_matrix = [[]] * len(fields_len)
 
-    def clustering(self):
+    def clustering(self, client_id: str = None):
         self.__generate_centroid()
         th_loop = 1
         while th_loop <= self.n_loop and not self.is_stop:
+            if client_id:
+                socket_worker.push(
+                    SocketPayload(
+                        data={
+                            "time": get_current_timestamp(),
+                            "content": f"Lần lặp số {th_loop}",
+                        },
+                        channel="clusteringLog",
+                        client_id=client_id,
+                    )
+                )
             self.is_stop = True
             self.__update_membership(th_loop)
             self.__update_centroid(th_loop)
@@ -66,7 +83,7 @@ class SSMC_FCM:
         for idx, membership in enumerate(self.membership):
             id_cluster = np.argmax(membership)
             self.pred_labels[id_cluster].append(self.identity[idx])
-        self.pred_labels = np.array(self.pred_labels, dtype=object)
+        self.pred_labels = np.array(self.pred_labels, dtype=object).tolist()
 
     def __calculate_norm_distance(self):
         __iter = 0
@@ -357,7 +374,25 @@ class SSMC_FCM:
         for cluster in self.pred_labels:
             print(cluster)
 
-    def show_loss_function(self):
+    def show_loss_function(self, client_id: str = None):
+        plt.clf()
         plt.plot(self.loss_values)
         plt.title("Loss function")
-        plt.show()
+        buffer = io.BytesIO()
+        plt.savefig(buffer, format="png")
+        buffer.seek(0)
+        image_base64 = base64.b64encode(buffer.getvalue()).decode()
+        buffer.close()
+        if client_id:
+            socket_worker.push(
+                SocketPayload(
+                    data={
+                        "time": get_current_timestamp(),
+                        "content": image_base64,
+                        "type": "image",
+                    },
+                    channel="clusteringLog",
+                    client_id=client_id,
+                )
+            )
+        return image_base64

@@ -32,6 +32,7 @@ class AccountApi(BaseAPIModel):
 
 class ClusterApi(BaseAPIModel):
     VECTORIZE = "/cluster/vectorize"
+    CLUSTERING = "/cluster/clustering"
 
 
 class ImageApi(BaseAPIModel):
@@ -54,6 +55,7 @@ API_PERMISSION = {
     AccountApi.NOTIFICATION: [Role.ADMIN, Role.USER],
     AccountApi.DISABLE_ACCOUNT: [Role.ADMIN],
     ClusterApi.VECTORIZE: ALLOW_ALL,
+    ClusterApi.CLUSTERING: ALLOW_ALL,
     ImageApi.GET: ALLOW_ALL,
 }
 

@@ -1,10 +1,13 @@
 import asyncio
-from typing import Dict
+from typing import Dict, Optional
 from fastapi import APIRouter
 
 from app.core.model import HttpResponse, success_response
 from app.core.api import ClusterApi
 from app.service.loader import loader
+from app.service.ssmc_fcm import SSMC_FCM
+from app.model.cluster import Cluster
+from app.util.model import get_dict
 from app.worker.socket import SocketPayload, socket_worker
 from app.util.time import get_current_timestamp
 
@@ -12,7 +15,7 @@ router = APIRouter()
 
 
 @router.post(ClusterApi.VECTORIZE, response_model=HttpResponse)
-async def vectorize(data: Dict, client_id: str = None):
+async def vectorize(data: Dict, client_id: Optional[str] = None):
     for headerIndex, raw_data in data.items():
         item_data = [item.get("data") for item in raw_data["data"]]
 
@@ -61,3 +64,16 @@ async def vectorize(data: Dict, client_id: str = None):
                 )
             )
     return success_response(data=data)
+
+
+@router.post(ClusterApi.CLUSTERING, response_model=HttpResponse)
+async def clustering(cluster: Cluster, client_id: Optional[str] = None):
+    ssmc_fcm = SSMC_FCM(**get_dict(cluster))
+    ssmc_fcm.clustering(client_id=client_id)
+    ssmc_fcm.show_loss_function(client_id=client_id)
+    return success_response(
+        data={
+            "pred_labels": ssmc_fcm.pred_labels,
+            "membership": ssmc_fcm.membership,
+        }
+    )
