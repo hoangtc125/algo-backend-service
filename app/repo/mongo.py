@@ -140,6 +140,11 @@ class BaseRepository:
         logger.log((inspect.currentframe().f_code.co_name, self.collection_name, query))
         return await self.collection.delete_one(query)
 
+    async def delete_many(self, query: Dict):
+        query = make_query(query)
+        logger.log((inspect.currentframe().f_code.co_name, self.collection_name, query))
+        return await self.collection.delete_many(query)
+
 
 def get_repo(
     model: T, url: str, db: str, new_connection: bool = False

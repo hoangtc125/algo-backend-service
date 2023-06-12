@@ -63,6 +63,22 @@
         "account_not_allowed": {
             "code": 5002,
             "message": "Tài khoản không thể thực hiện tính năng này"
+        },
+        "club_not_exist": {
+            "code": 6000,
+            "message": "Club không tồn tại"
+        },
+        "group_not_exist": {
+            "code": 6001,
+            "message": "Nhóm không tồn tại"
+        },
+        "member_not_exist": {
+            "code": 6002,
+            "message": "Thành viên không tồn tại"
+        },
+        "member_invalid_action": {
+            "code": 6003,
+            "message": "Thành viên không có quyền thực hiện"
         }
     }
 }
