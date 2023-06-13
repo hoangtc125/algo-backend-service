@@ -13,6 +13,7 @@ from app.core.api import AccountApi, get_permissions
 from app.core.config import project_config
 from app.core.log import logger
 from app.service.account import AccountService
+from app.service.club import ClubService
 from app.service.detect import (
     detect_text_from_base64,
     make_card_huce,
@@ -101,7 +102,15 @@ async def about_me(
     if not account:
         raise CustomHTTPException(error_type="account_not_exist")
     lst_api_permissions = get_permissions(account.role)
-    result = {"account": account, "api_permissions": lst_api_permissions}
+    member_club_mapping, follow_club_mapping = await ClubService().get_user_info(
+        user_id=actor
+    )
+    result = {
+        "account": account,
+        "api_permissions": lst_api_permissions,
+        "member": member_club_mapping,
+        "follow": follow_club_mapping,
+    }
     return success_response(data=result)
 
 
@@ -113,7 +122,16 @@ async def get(
     result = await AccountService().get_account({"_id": id})
     if not result:
         raise CustomHTTPException(error_type="account_not_exist")
-    return success_response(data=result)
+    member_club_mapping, follow_club_mapping = await ClubService().get_user_info(
+        user_id=id
+    )
+    return success_response(
+        data={
+            "user": result,
+            "member": member_club_mapping,
+            "follow": follow_club_mapping,
+        }
+    )
 
 
 @router.post(AccountApi.GET_ALL, response_model=HttpResponse)

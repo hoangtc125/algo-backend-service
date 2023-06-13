@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 from pydantic import BaseModel
 
 from app.core.constant import (
@@ -28,6 +28,8 @@ class Club(BaseAuditModel):
 
 class ClubResponse(Club):
     id: str
+    groups: Optional[List] = []
+    followers: Optional[List] = []
 
 
 class Group(BaseAuditModel):
@@ -40,6 +42,7 @@ class Group(BaseAuditModel):
 
 class GroupResponse(Group):
     id: str
+    members: Optional[List] = []
 
 
 class ClubMembership(BaseAuditModel):
@@ -53,6 +56,7 @@ class ClubMembership(BaseAuditModel):
 
 class ClubMembershipResponse(ClubMembership):
     id: str
+    user: Optional[Any] = None
 
 
 class ClubFollower(BaseAuditModel):
@@ -62,12 +66,18 @@ class ClubFollower(BaseAuditModel):
 
 class ClubFollowerResponse(ClubFollower):
     id: str
+    user: Optional[Any] = None
 
 
 class ClubRequest(BaseAuditModel):
     user_id: str
     club_id: str
     status: ClubRequestStatus.PROCESSING
+
+
+class ClubRequestResponse(ClubRequest):
+    id: str
+    user: Optional[Any] = None
 
 
 GroupDefault = [
