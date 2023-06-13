@@ -322,7 +322,9 @@ class SSMC_FCM:
             elif self.norm_mode == NormMode.MINMAX.value:
                 min_distance, max_distance = minmax_distance
                 field_distance = (
-                    field_weight * (__distance - min_distance) / max_distance
+                    0
+                    if max_distance == 0
+                    else field_weight * (__distance - min_distance) / max_distance
                 )
                 try:
                     if field_distance < 0:
