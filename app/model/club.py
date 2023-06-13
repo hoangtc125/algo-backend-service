@@ -47,7 +47,7 @@ class ClubMembership(BaseAuditModel):
     role: str = ClubRole.MEMBER
     status: str = MembershipStatus.ACTIVE
     user_id: Optional[str] = None
-    group_id: Optional[str] = None
+    group_id: Optional[List] = None
     gen: Optional[str] = None
 
 

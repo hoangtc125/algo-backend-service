@@ -44,6 +44,7 @@ class ClubApi(BaseAPIModel):
     MEMBER_GET = "/club/member/get"
     MEMBER_CREATE = "/club/member/create"
     MEMBER_UPDATE = "/club/member/update"
+    MEMBER_UPDATE_GROUP = "/club/member/update-group"
     MEMBER_DELETE = "/club/member/delete"
     MEMBER_GETALL = "/club/member/get-all"
     FOLLOW_GET = "/club/follow/get"
@@ -92,6 +93,7 @@ API_PERMISSION = {
     ClubApi.MEMBER_GET: ALLOW_ALL,
     ClubApi.MEMBER_CREATE: [Role.ADMIN, Role.USER],
     ClubApi.MEMBER_UPDATE: [Role.ADMIN, Role.USER],
+    ClubApi.MEMBER_UPDATE_GROUP: [Role.ADMIN, Role.USER],
     ClubApi.MEMBER_DELETE: [Role.ADMIN, Role.USER],
     ClubApi.MEMBER_GETALL: ALLOW_ALL,
     ClubApi.FOLLOW_GET: ALLOW_ALL,

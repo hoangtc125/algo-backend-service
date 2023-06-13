@@ -79,6 +79,18 @@
         "member_invalid_action": {
             "code": 6003,
             "message": "Thành viên không có quyền thực hiện"
+        },
+        "already_follow": {
+            "code": 6004,
+            "message": "Đã quan tâm Câu lạc bộ này"
+        },
+        "not_follow": {
+            "code": 6005,
+            "message": "Chưa quan tâm Câu lạc bộ này"
+        },
+        "member_exist": {
+            "code": 6006,
+            "message": "Thành viên đã tồn tại"
         }
     }
 }

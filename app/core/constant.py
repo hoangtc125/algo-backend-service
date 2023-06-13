@@ -76,7 +76,7 @@ class ClubGroup:
 
 
 class ClubType:
-    EDU: str = "EDU>"
+    EDU: str = "EDU"
 
 
 class GroupType:

@@ -52,7 +52,10 @@ async def create_club(
 ):
     club, admin_group_id = await ClubService().create_algo_club(club_create)
     member = ClubMembership(
-        club_id=club.id, user_id=actor, role=ClubRole.PRESIDENT, group_id=admin_group_id
+        club_id=club.id,
+        user_id=actor,
+        role=ClubRole.PRESIDENT,
+        group_id=[admin_group_id],
     )
     follower = ClubFollower(club_id=club.id, user_id=actor)
     await ClubService().create_algo_member(member)
@@ -77,7 +80,10 @@ async def update_club(
     token: str = Depends(oauth2_scheme),
     actor: str = Depends(get_actor_from_request),
 ):
-    pass
+    res = await ClubService().update_algo_club(
+        club_id=club_id, actor=actor, data=club_update
+    )
+    return success_response(data=res)
 
 
 @router.delete(ClubApi.CLUB_DELETE, response_model=HttpResponse)
@@ -121,7 +127,7 @@ async def get_all_group(
 
 @router.post(ClubApi.GROUP_CREATE, response_model=HttpResponse)
 async def create_group(
-    group_create: Club,
+    group_create: Group,
     token: str = Depends(oauth2_scheme),
     actor: str = Depends(get_actor_from_request),
 ):
@@ -141,7 +147,10 @@ async def update_group(
     token: str = Depends(oauth2_scheme),
     actor: str = Depends(get_actor_from_request),
 ):
-    pass
+    res = await ClubService().update_algo_group(
+        group_id=group_id, actor=actor, data=group_update
+    )
+    return success_response(data=res)
 
 
 @router.delete(ClubApi.GROUP_DELETE, response_model=HttpResponse)
@@ -151,7 +160,8 @@ async def delete_group(
     token: str = Depends(oauth2_scheme),
     actor: str = Depends(get_actor_from_request),
 ):
-    pass
+    await ClubService().delete_algo_group(group_id=group_id, actor=actor)
+    return success_response()
 
 
 # ==========================================================
@@ -185,16 +195,17 @@ async def get_all_member(
 
 @router.post(ClubApi.MEMBER_CREATE, response_model=HttpResponse)
 async def create_member(
-    member_create: Club,
+    member_create: ClubMembership,
     token: str = Depends(oauth2_scheme),
     actor: str = Depends(get_actor_from_request),
 ):
-    member = await ClubService().create_algo_member(member_create)
-    socket_worker.push(
-        SocketPayload(
-            data=f"Câu lạc bộ {member.name} đã được tạo vào lúc {to_datestring(get_current_timestamp())}"
+    member = await ClubService().create_algo_member(member_create, actor)
+    try:
+        await ClubService().create_algo_follower(
+            ClubFollower(club_id=member.club_id, user_id=member.user_id)
         )
-    )
+    except:
+        pass
     return success_response(data=member)
 
 
@@ -205,17 +216,34 @@ async def update_member(
     token: str = Depends(oauth2_scheme),
     actor: str = Depends(get_actor_from_request),
 ):
-    pass
+    member = await ClubService().update_algo_member(
+        member_id=member_id, actor=actor, data=member_update
+    )
+    return success_response(data=member)
+
+
+@router.put(ClubApi.MEMBER_UPDATE_GROUP, response_model=HttpResponse)
+async def update_member_group(
+    member_id: str,
+    group_id: str,
+    add: bool = True,
+    token: str = Depends(oauth2_scheme),
+    actor: str = Depends(get_actor_from_request),
+):
+    member = await ClubService().update_algo_member_group(
+        member_id=member_id, actor=actor, add=add, group_id=group_id
+    )
+    return success_response(data=member)
 
 
 @router.delete(ClubApi.MEMBER_DELETE, response_model=HttpResponse)
 async def delete_member(
     member_id: str,
-    member_update: Dict,
     token: str = Depends(oauth2_scheme),
     actor: str = Depends(get_actor_from_request),
 ):
-    pass
+    await ClubService().delete_algo_member(member_id=member_id, actor=actor)
+    return success_response()
 
 
 # ==========================================================
@@ -239,11 +267,23 @@ async def get_all_follow(
     return success_response(data=result)
 
 
-@router.put(ClubApi.FOLLOW_UPDATE, response_model=HttpResponse)
-async def update_follow(
-    follow_id: str,
-    follow_update: Dict,
+@router.post(ClubApi.FOLLOW_CREATE, response_model=HttpResponse)
+async def create_follow(
+    club_id: str,
     token: str = Depends(oauth2_scheme),
-    actor: str = Depends(get_actor_from_request),
+    actor=Depends(get_actor_from_request),
 ):
-    pass
+    follower = ClubFollower(club_id=club_id, user_id=actor)
+    follow = await ClubService().create_algo_follower(follower)
+    return success_response(data=follow)
+
+
+@router.delete(ClubApi.FOLLOW_DELETE, response_model=HttpResponse)
+async def delete_follow(
+    club_id: str,
+    token: str = Depends(oauth2_scheme),
+    actor=Depends(get_actor_from_request),
+):
+    follower = ClubFollower(club_id=club_id, user_id=actor)
+    await ClubService().delete_algo_follower(follower)
+    return success_response()
