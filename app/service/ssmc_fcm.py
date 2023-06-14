@@ -7,7 +7,7 @@ import scipy.optimize
 import numpy as np
 import matplotlib.pyplot as plt
 from enum import Enum
-from scipy.spatial.distance import cdist
+from scipy.spatial.distance import cdist, pdist, squareform
 from typing import Optional, List, Union
 
 from app.core.config import project_config
@@ -53,11 +53,15 @@ class SSMC_FCM:
         self.n_loop = n_loop
         self.is_stop = False
         self.norm_mode = norm_mode
-        self.pred_labels = [[] for _ in range(self.n_clusters)]
+        self.pred_labels = []
+        self.pred_labels_idx = []
         self.is_plot = is_plot
         self.loss_values = []
         self.Dij = None
         self.distance_matrix = [[]] * len(fields_len)
+        self.DB_metric = []
+        self.dataset_distance_matrix = squareform(pdist(self.dataset))
+        self.ASWC_metric = []
 
     def clustering(self, client_id: str = None):
         self.__generate_centroid()
@@ -77,13 +81,15 @@ class SSMC_FCM:
             self.is_stop = True
             self.__update_membership(th_loop)
             self.__update_centroid(th_loop)
+
             self.__calculate_norm_distance()
+            self.__calculate_pred_labels_idx()
+            self.__calculate_Dij()
+
             self.__calculate_loss_function()
+            self.__calculate_Davies_Bouldin()
+            self.__calculate_ASWC()
             th_loop += 1
-        for idx, membership in enumerate(self.membership):
-            id_cluster = np.argmax(membership)
-            self.pred_labels[id_cluster].append(self.identity[idx])
-        self.pred_labels = np.array(self.pred_labels, dtype=object).tolist()
 
     def __calculate_norm_distance(self):
         __iter = 0
@@ -100,6 +106,16 @@ class SSMC_FCM:
             )
             self.distance_matrix[id_field] = distance_matrix
             __iter += field_len
+
+    def __calculate_pred_labels_idx(self):
+        self.pred_labels_idx = [[] for _ in range(self.n_clusters)]
+        pred_labels = [[] for _ in range(self.n_clusters)]
+        for idx, membership in enumerate(self.membership):
+            id_cluster = np.argmax(membership)
+            self.pred_labels_idx[id_cluster].append(idx)
+            pred_labels[id_cluster].append(self.identity[idx])
+        self.pred_labels.append(pred_labels)
+        self.pred_labels_idx = np.array(self.pred_labels_idx, dtype=object)
 
     def __generate_centroid(self):
         # computing centroid for supervised clusters
@@ -318,7 +334,9 @@ class SSMC_FCM:
         ):
             __distance = self.distance_matrix[id_field][id_point][id_centroid]
             if self.norm_mode == NormMode.L2.value:
-                field_distance = field_weight * __distance / l2_distance
+                field_distance = (
+                    0 if l2_distance == 0 else field_weight * __distance / l2_distance
+                )
             elif self.norm_mode == NormMode.MINMAX.value:
                 min_distance, max_distance = minmax_distance
                 field_distance = (
@@ -335,10 +353,49 @@ class SSMC_FCM:
             __iter += field_len
         return distance if distance else self.epsilon**2
 
+    def __calculate_centroid_distance(self, id_centroid1, id_centroid2):
+        __iter = 0
+        distance = 0
+        for (
+            field_len,
+            field_weight,
+            l2_distance,
+            minmax_distance,
+        ) in zip(
+            self.fields_len,
+            self.fields_weight,
+            self.l2_distance,
+            self.minmax_distance,
+        ):
+            __distance = self.__calculate_euclid_distance(
+                self.centroid[id_centroid1][__iter : __iter + field_len],
+                self.centroid[id_centroid2][__iter : __iter + field_len],
+            )
+            if self.norm_mode == NormMode.L2.value:
+                field_distance = (
+                    0 if l2_distance == 0 else field_weight * __distance / l2_distance
+                )
+            elif self.norm_mode == NormMode.MINMAX.value:
+                min_distance, max_distance = minmax_distance
+                field_distance = (
+                    0
+                    if max_distance == 0
+                    else field_weight
+                    * (
+                        __distance - min_distance
+                        if __distance > min_distance
+                        else __distance
+                    )
+                    / max_distance
+                )
+            distance += field_distance
+            __iter += field_len
+        return distance if distance else self.epsilon**2
+
     def __calculate_euclid_distance(self, p1, p2):
         return np.linalg.norm(np.array(p1) - np.array(p2))
 
-    def __calculate_loss_function(self):
+    def __calculate_Dij(self):
         self.Dij = [
             [
                 self.__calculate_point_distance(id_point, id_centroid)
@@ -346,6 +403,8 @@ class SSMC_FCM:
             ]
             for id_point in range(len(self.dataset))
         ]
+
+    def __calculate_loss_function(self):
         self.loss_values.append(
             sum(
                 [
@@ -364,6 +423,61 @@ class SSMC_FCM:
             )
         )
 
+    def __calculate_Davies_Bouldin(self):
+        average_distances = [
+            (
+                0
+                if len(self.pred_labels_idx[centroid_id]) == 0
+                else (
+                    sum(
+                        [
+                            self.Dij[point_id][centroid_id]
+                            for point_id in self.pred_labels_idx[centroid_id]
+                        ]
+                    )
+                    / len(self.pred_labels_idx[centroid_id])
+                )
+            )
+            for centroid_id in range(len(self.centroid))
+        ]
+        self.DB_metric.append(
+            sum(
+                [
+                    max(
+                        [
+                            0
+                            if c_id == centroid_id
+                            else (
+                                average_distances[centroid_id] + average_distances[c_id]
+                            )
+                            / self.__calculate_centroid_distance(centroid_id, c_id)
+                            for c_id in range(len(self.centroid))
+                        ]
+                    )
+                    for centroid_id in range(len(self.centroid))
+                ]
+            )
+            / len(self.centroid)
+        )
+
+    def __calculate_ASWC(self):
+        sx = []
+        for id_point in range(len(self.dataset)):
+            aij = bij = 0
+            for cluster in self.pred_labels_idx:
+                qij = np.mean(
+                    [
+                        self.dataset_distance_matrix[id_point][id_another]
+                        for id_another in cluster
+                    ]
+                )
+                if id_point in cluster:
+                    aij = qij
+                elif bij < qij:
+                    bij = qij
+            sx.append(bij / (aij + 0.000001))
+        self.ASWC_metric.append(sum(sx) / len(self.dataset))
+
     def show_cluster_members(self):
         len_supervised = sum(
             [len(supervised_set) for supervised_set in self.supervised_set]
@@ -378,8 +492,18 @@ class SSMC_FCM:
 
     def show_loss_function(self, client_id: str = None):
         plt.clf()
+        plt.figure(figsize=(12, 4))
+        plt.subplot(311)
         plt.plot(self.loss_values)
-        plt.title("Loss function")
+        plt.title("Target function")
+        plt.subplot(312)
+        plt.plot(self.DB_metric)
+        plt.title("DB metric")
+        plt.subplot(313)
+        plt.plot(self.ASWC_metric)
+        plt.title("ASWS metric")
+        plt.tight_layout()
+        plt.xticks(list(range(len(self.ASWC_metric))))
         buffer = io.BytesIO()
         plt.savefig(buffer, format="png")
         buffer.seek(0)
