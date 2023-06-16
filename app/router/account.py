@@ -117,7 +117,6 @@ async def about_me(
 @router.get(AccountApi.GET, response_model=HttpResponse)
 async def get(
     id: str,
-    token: str = Depends(oauth2_scheme),
 ):
     result = await AccountService().get_account({"_id": id})
     if not result:
@@ -127,7 +126,7 @@ async def get(
     )
     return success_response(
         data={
-            "user": result,
+            "account": result,
             "member": member_club_mapping,
             "follow": follow_club_mapping,
         }
@@ -141,7 +140,6 @@ async def get_all(
     query: Dict = {},
     orderby: str = "created_at",
     sort: SortOrder = Query(SortOrder.DESC),
-    token: str = Depends(oauth2_scheme),
 ):
     result = await AccountService().get_all(
         page_size=page_size,

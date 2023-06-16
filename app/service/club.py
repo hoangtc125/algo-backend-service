@@ -379,9 +379,7 @@ class ClubService:
 
     async def get_user_info(self, user_id: str):
         members = await self.get_all_member_min(query={"user_id": user_id})
-        member_club_mapping = {
-            member.club_id: {"member": members} for member in members
-        }
+        member_club_mapping = {member.club_id: {"member": member} for member in members}
         member_clubs = await self.get_all_club_min(
             query={"_id": {"$in": list(member_club_mapping.keys())}}
         )
@@ -391,9 +389,7 @@ class ClubService:
                 mapping["club"] = club
 
         follows = await self.get_all_follow_min(query={"user_id": user_id})
-        follow_club_mapping = {
-            follow.club_id: {"follow": follows} for follow in follows
-        }
+        follow_club_mapping = {follow.club_id: {"follow": follow} for follow in follows}
         follow_clubs = await self.get_all_club_min(
             query={"_id": {"$in": list(follow_club_mapping.keys())}}
         )
