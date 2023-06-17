@@ -91,6 +91,10 @@ def authenticate_internal_request(request: Request):
         "/docs",
         "/favicon.ico",
         "/openapi.json",
+        "/redoc",
+        "/static/swagger-ui-bundle.js",
+        "/static/swagger-ui.css",
+        "/static/redoc.standalone.js",
     ]:
         return True
     try:

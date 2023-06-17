@@ -108,7 +108,9 @@ class ClubService:
         if not res:
             return None
         id, club = res
-        groups = await self.get_all_group(query={"club_id": id})
+        groups = await self.get_all_group(
+            query={"club_id": id, "type": GroupType.PERMANANT}
+        )
         followers = await self.get_all_follow(query={"club_id": id})
         return ClubResponse(id=id, groups=groups, followers=followers, **get_dict(club))
 
@@ -116,7 +118,9 @@ class ClubService:
         clubs = await self.club_repo.get_all(**kargs)
         res = []
         for doc_id, club in clubs.items():
-            groups = await self.get_all_group(query={"club_id": doc_id})
+            groups = await self.get_all_group(
+                query={"club_id": doc_id, "type": GroupType.PERMANANT}
+            )
             followers = await self.get_all_follow(query={"club_id": doc_id})
             res.append(
                 ClubResponse(
