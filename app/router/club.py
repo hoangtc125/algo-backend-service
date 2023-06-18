@@ -5,10 +5,12 @@ from app.core.exception import CustomHTTPException
 from app.core.model import HttpResponse, SocketPayload, success_response
 from app.core.api import ClubApi
 from app.core.constant import NotiKind
+from app.model.image import Image
 from app.router.account import oauth2_scheme
 from app.service.club import ClubService
 from app.model.club import *
 from app.model.notification import Notification, SocketNotification
+from app.service.image import ImageService
 from app.util.auth import get_actor_from_request
 from app.util.model import get_dict
 from app.util.time import get_current_timestamp, to_datestring
@@ -80,6 +82,9 @@ async def update_club(
     token: str = Depends(oauth2_scheme),
     actor: str = Depends(get_actor_from_request),
 ):
+    if "image" in club_update.keys():
+        image_id = await ImageService().save(Image(**club_update["image"]))
+        club_update["image"] = image_id
     res = await ClubService().update_algo_club(
         club_id=club_id, actor=actor, data=club_update
     )

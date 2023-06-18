@@ -102,14 +102,9 @@ async def about_me(
     if not account:
         raise CustomHTTPException(error_type="account_not_exist")
     lst_api_permissions = get_permissions(account.role)
-    member_club_mapping, follow_club_mapping = await ClubService().get_user_info(
-        user_id=actor
-    )
     result = {
         "account": account,
         "api_permissions": lst_api_permissions,
-        "member": member_club_mapping,
-        "follow": follow_club_mapping,
     }
     return success_response(data=result)
 

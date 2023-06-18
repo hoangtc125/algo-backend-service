@@ -4,6 +4,7 @@ from app.core.exception import CustomHTTPException
 from app.core.model import SocketPayload
 from app.core.constant import NotiKind
 from app.core.config import project_config
+from app.service.image import ImageService
 from app.model.account import Account, AccountResponse
 from app.model.notification import Notification, SocketNotification
 from app.model.club import *
@@ -108,23 +109,35 @@ class ClubService:
         if not res:
             return None
         id, club = res
+        avatar = None
+        if club.image:
+            avatar = await ImageService().get_image(query={"_id": club.image})
         groups = await self.get_all_group(
             query={"club_id": id, "type": GroupType.PERMANANT}
         )
         followers = await self.get_all_follow(query={"club_id": id})
-        return ClubResponse(id=id, groups=groups, followers=followers, **get_dict(club))
+        return ClubResponse(
+            id=id, groups=groups, followers=followers, avatar=avatar, **get_dict(club)
+        )
 
     async def get_all_club(self, **kargs):
         clubs = await self.club_repo.get_all(**kargs)
         res = []
         for doc_id, club in clubs.items():
+            avatar = None
+            if club.image:
+                avatar = await ImageService().get_image(query={"_id": club.image})
             groups = await self.get_all_group(
                 query={"club_id": doc_id, "type": GroupType.PERMANANT}
             )
             followers = await self.get_all_follow(query={"club_id": doc_id})
             res.append(
                 ClubResponse(
-                    id=doc_id, groups=groups, followers=followers, **get_dict(club)
+                    id=doc_id,
+                    groups=groups,
+                    followers=followers,
+                    avatar=avatar,
+                    **get_dict(club),
                 )
             )
         return res
@@ -390,6 +403,8 @@ class ClubService:
         for club in member_clubs:
             mapping = member_club_mapping.get(club.id)
             if mapping:
+                if club.image:
+                    club.avatar = await ImageService().get_image({"_id": club.image})
                 mapping["club"] = club
 
         follows = await self.get_all_follow_min(query={"user_id": user_id})
@@ -400,6 +415,8 @@ class ClubService:
         for club in follow_clubs:
             mapping = follow_club_mapping.get(club.id)
             if mapping:
+                if club.image:
+                    club.avatar = await ImageService().get_image({"_id": club.image})
                 mapping["club"] = club
 
         return (list(member_club_mapping.values()), list(follow_club_mapping.values()))

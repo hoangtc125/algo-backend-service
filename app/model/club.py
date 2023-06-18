@@ -16,6 +16,7 @@ class Club(BaseAuditModel):
     email: str
     nickname: Optional[str] = None
     address: Optional[str] = None
+    addressPosition: Optional[Dict] = None
     slogan: Optional[str] = None
     description: Optional[str] = None
     image: Optional[str] = None
@@ -30,6 +31,7 @@ class ClubResponse(Club):
     id: str
     groups: Optional[List] = []
     followers: Optional[List] = []
+    avatar: Optional[Any] = None
 
 
 class Group(BaseAuditModel):

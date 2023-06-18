@@ -34,3 +34,10 @@ class ImageService:
             return doc_id
         except:
             pass
+
+    async def update(self, image: Image):
+        try:
+            doc_id = await self.image_repo.update_by_id(id=image.uid, obj=image)
+            return doc_id
+        except:
+            pass
