@@ -224,7 +224,9 @@ async def update_member(
     member = await ClubService().update_algo_member(
         member_id=member_id, actor=actor, data=member_update
     )
-    return success_response(data=member)
+    return success_response(
+        data={"member_update": member_update, "member_id": member_id}
+    )
 
 
 @router.put(ClubApi.MEMBER_UPDATE_GROUP, response_model=HttpResponse)
@@ -238,7 +240,9 @@ async def update_member_group(
     member = await ClubService().update_algo_member_group(
         member_id=member_id, actor=actor, add=add, group_id=group_id
     )
-    return success_response(data=member)
+    return success_response(
+        data={"add": add, "group_id": group_id, "member_id": member_id}
+    )
 
 
 @router.delete(ClubApi.MEMBER_DELETE, response_model=HttpResponse)
