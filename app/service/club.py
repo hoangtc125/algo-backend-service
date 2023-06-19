@@ -303,7 +303,19 @@ class ClubService:
         if check_member:
             raise CustomHTTPException("member_exist")
         inserted_id = await self.member_repo.insert(member)
-        return to_response_dto(inserted_id, member, ClubMembershipResponse)
+        res = {}
+        if member.user_id:
+            try:
+                await self.create_algo_follower(
+                    ClubFollower(club_id=member.club_id, user_id=member.user_id)
+                )
+            except:
+                pass
+            account = await self.get_account({"_id": member.user_id})
+            if account:
+                res = get_dict(account)
+        res["member"] = to_response_dto(inserted_id, member, ClubMembershipResponse)
+        return res
 
     async def update_algo_member(self, member_id: str, actor: str, data: Dict):
         member = await self.get_member({"_id": member_id})

@@ -205,12 +205,6 @@ async def create_member(
     actor: str = Depends(get_actor_from_request),
 ):
     member = await ClubService().create_algo_member(member_create, actor)
-    try:
-        await ClubService().create_algo_follower(
-            ClubFollower(club_id=member.club_id, user_id=member.user_id)
-        )
-    except:
-        pass
     return success_response(data=member)
 
 
@@ -252,7 +246,7 @@ async def delete_member(
     actor: str = Depends(get_actor_from_request),
 ):
     await ClubService().delete_algo_member(member_id=member_id, actor=actor)
-    return success_response()
+    return success_response(data=member_id)
 
 
 # ==========================================================
