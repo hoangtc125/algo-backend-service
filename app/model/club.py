@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel
 
 from app.core.constant import (
+    EventType,
     MembershipStatus,
     ClubRole,
     ClubRequestStatus,
@@ -133,6 +134,107 @@ GroupDefault = [
         ),
     },
 ]
+
+
+class ClubEvent(BaseAuditModel):
+    club_id: str
+    group_id: str
+    name: str
+    description: str
+    active_round: str
+    start_time: int
+    end_time: int
+    status: str = None
+    type: str = EventType.RECRUIT
+
+
+class CLubEventResponse(ClubEvent):
+    id: str
+
+
+class Round(BaseAuditModel):
+    club_id: str
+    event_id: str
+    name: str
+    description: str
+    status: str = None
+
+
+class FormRound(Round):
+    form_question_id: Optional[str] = None
+
+
+class FormRoundResponse(FormRound):
+    id: str
+
+
+class InterviewRound(Round):
+    pass
+
+
+class InterviewRoundResponse(InterviewRound):
+    id: str
+
+
+class Participant(BaseAuditModel):
+    club_id: str
+    event_id: str
+    email: str
+    name: str
+    photo_url: Optional[str] = None
+    user_id: Optional[str] = None
+    status: bool = True
+
+
+class ParticipantResponse(Participant):
+    id: str
+
+
+class FormQuestion(BaseAuditModel):
+    club_id: str
+    event_id: str
+    sections: List = []
+
+
+class FormQuestionResponse(FormQuestion):
+    id: str
+
+
+class FormAnswer(FormQuestion):
+    form_id: str
+    participant_id: str
+
+
+class FormAnswerResponse(FormAnswer):
+    id: str
+
+
+class Shift(BaseAuditModel):
+    club_id: str
+    event_id: str
+    name: str
+    start_time: int
+    end_time: int
+    place: str
+    place_position: Optional[Dict] = None
+    capacity: int
+
+
+class ShiftResponse(Shift):
+    id: str
+
+
+class Appointment(BaseAuditModel):
+    club_id: str
+    event_id: str
+    round_id: str
+    shift_ids: List = []
+    participant_id: str
+
+
+class AppointmentResponse(Appointment):
+    id: str
+
 
 if __name__ == "__main__":
     pass

@@ -82,3 +82,12 @@ class ClubType:
 class GroupType:
     TEMP: str = "TEMP"
     PERMANANT: str = "PERMANANT"
+
+
+class EventType:
+    RECRUIT: str = "RECRUIT"
+
+
+class RoundType:
+    FORM: str = "FORM"
+    INTERVIEW: str = "INTERVIEW"
