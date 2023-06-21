@@ -59,9 +59,7 @@ async def create_club(
         role=ClubRole.PRESIDENT,
         group_id=[admin_group_id],
     )
-    follower = ClubFollower(club_id=club.id, user_id=actor)
     await ClubService().create_algo_member(member)
-    await ClubService().create_algo_follower(follower)
     notification = Notification(
         content=f"Câu lạc bộ {club.name} đã được tạo vào lúc {to_datestring(get_current_timestamp())}",
         to=actor,
