@@ -12,3 +12,4 @@ log
 algo-firebase.json
 cclub-cloud-vision-api.json
 *.pem
+.VSCodeCounter

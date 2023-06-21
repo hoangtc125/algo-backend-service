@@ -102,7 +102,6 @@ def make_card_huce(info_list):
         expired_card=info_list[ids_detect["expired_card"]],
         number=info_list[ids_detect["number"]],
         email=info_list[ids_detect["email"]],
-        major_class=info_list[ids_detect["major_class"]],
     )
 
 

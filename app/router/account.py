@@ -5,7 +5,7 @@ from fastapi.responses import RedirectResponse
 from firebase_admin.auth import verify_id_token
 from firebase_admin._auth_utils import InvalidIdTokenError
 
-from app.core.constant import Provider, SortOrder
+from app.core.constant import NotiKind, Provider, School, SortOrder
 from app.core.exception import CustomHTTPException
 from app.core.model import HttpResponse, SocketPayload, success_response
 from app.core.oauth2 import CustomOAuth2PasswordBearer
@@ -13,14 +13,19 @@ from app.core.api import AccountApi, get_permissions
 from app.core.config import project_config
 from app.core.log import logger
 from app.service.account import AccountService
+from app.service.club import ClubService
 from app.service.detect import (
-    detect_code_from_base64,
     detect_text_from_base64,
-    file_to_base64,
+    make_card_huce,
     make_card_hust,
+    make_card_hust2,
+    make_card_neu,
+    make_card_neu2,
 )
+from app.service.image import ImageService
 from app.service.notification import NotificationService
-from app.model.account import AccountCreate, Account, PasswordUpdate
+from app.model.image import Image
+from app.model.account import AccountCreate, Account, PasswordReset, PasswordUpdate
 from app.model.notification import Notification, SocketNotification
 from app.util.auth import get_actor_from_request
 from app.util.mail import (
@@ -97,19 +102,30 @@ async def about_me(
     if not account:
         raise CustomHTTPException(error_type="account_not_exist")
     lst_api_permissions = get_permissions(account.role)
-    result = {"account": account, "api_permissions": lst_api_permissions}
+    result = {
+        "account": account,
+        "api_permissions": lst_api_permissions,
+    }
     return success_response(data=result)
 
 
 @router.get(AccountApi.GET, response_model=HttpResponse)
 async def get(
     id: str,
-    token: str = Depends(oauth2_scheme),
 ):
     result = await AccountService().get_account({"_id": id})
     if not result:
         raise CustomHTTPException(error_type="account_not_exist")
-    return success_response(data=result)
+    member_club_mapping, follow_club_mapping = await ClubService().get_user_info(
+        user_id=id
+    )
+    return success_response(
+        data={
+            "account": result,
+            "member": member_club_mapping,
+            "follow": follow_club_mapping,
+        }
+    )
 
 
 @router.post(AccountApi.GET_ALL, response_model=HttpResponse)
@@ -119,7 +135,6 @@ async def get_all(
     query: Dict = {},
     orderby: str = "created_at",
     sort: SortOrder = Query(SortOrder.DESC),
-    token: str = Depends(oauth2_scheme),
 ):
     result = await AccountService().get_all(
         page_size=page_size,
@@ -135,7 +150,7 @@ async def get_all(
 async def active(token: str):
     await AccountService().active_algo_account(token)
     return RedirectResponse(
-        url=f"http://{project_config.HOST}:{project_config.FRONTEND_PORT}/login"
+        url=f"http://{project_config.HOST}:{project_config.FRONTEND_PORT}/algo-frontend-service/login#active"
     )
 
 
@@ -171,7 +186,7 @@ async def send_mail_reset(email: str):
             receiver_email=email,
             subject="Thông báo đặt lại mật khẩu",
             content=make_mail_reset_password(
-                f"http://{project_config.HOST}:{project_config.FRONTEND_PORT}/reset-password?token={token}"
+                f"http://{project_config.HOST}:{project_config.FRONTEND_PORT}/algo-frontend-service/reset-password?token={token}"
             ),
         )
     )
@@ -179,32 +194,59 @@ async def send_mail_reset(email: str):
 
 
 @router.post(AccountApi.RESET_PASSWORD, response_model=HttpResponse)
-async def reset_password(passwordUpdate: PasswordUpdate):
-    res = await AccountService().reset_password(passwordUpdate)
+async def reset_password(passwordReset: PasswordReset):
+    res = await AccountService().reset_password(passwordReset)
+    return success_response(data=res)
+
+
+@router.post(AccountApi.UPDATE_PASSWORD, response_model=HttpResponse)
+async def update_password(
+    passwordUpdate: PasswordUpdate,
+    token: str = Depends(oauth2_scheme),
+    actor=Depends(get_actor_from_request),
+):
+    res = await AccountService().update_password(actor, passwordUpdate)
     return success_response(data=res)
 
 
 @router.get(AccountApi.VERIFY, response_model=HttpResponse)
 async def verify(token: str):
     await AccountService().verify_account(token)
-    return success_response()
+    return RedirectResponse(
+        url=f"http://{project_config.HOST}:{project_config.FRONTEND_PORT}/algo-frontend-service/login#verify"
+    )
 
 
 @router.post(AccountApi.VERIFY, response_model=HttpResponse)
 async def request_verify(
-    image_bytes: str = None,
+    image: Image,
+    school: School = Query(...),
     token: str = Depends(oauth2_scheme),
     actor=Depends(get_actor_from_request),
 ):
-    file_path = r"/home/hoangtc125/Downloads/20194060-Trần Công Hoàng.jpg"
-    image_base64 = file_to_base64(file_path)
+    image_base64 = str(image.url).split("base64,")[1]
     info_list = detect_text_from_base64(image_base64)
-    code_list = detect_code_from_base64(image_base64)
-    card = make_card_hust(info_list)
-    if card.number not in code_list:
-        raise CustomHTTPException(error_type="detect_barcode_failure")
+    if school == School.HUST.value:
+        card = make_card_hust(info_list)
+    if school == School.HUST2.value:
+        card = make_card_hust2(info_list)
+    elif school == School.HUCE.value:
+        card = make_card_huce(info_list)
+    elif school == School.NEU.value:
+        card = make_card_neu(info_list)
+    elif school == School.NEU2.value:
+        card = make_card_neu2(info_list)
+    await ImageService().save(image)
     await AccountService().account_repo.update_by_id(
-        actor, {"verify": {"status": False, "type": "HUST", "detail": card.__dict__}}
+        actor,
+        {
+            "verify": {
+                "status": False,
+                "type": school,
+                "detail": card.__dict__,
+                "image": image.uid,
+            },
+        },
     )
     token = AccountService().make_token(actor)
     mail_worker.push(
@@ -218,7 +260,9 @@ async def request_verify(
         )
     )
     notification = Notification(
-        content=f"A link to verify your account has been sent to {card.email}", to=actor
+        content=f"A link to verify your account has been sent to {card.email}",
+        to=actor,
+        kind=NotiKind.SUCCESS,
     )
     socket_worker.push(
         SocketPayload(

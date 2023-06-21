@@ -119,14 +119,13 @@ class CardHUST2(Card):
             "school": "HANOI UNIVERSITY OF SCIENCE AND TECHNOLOGY",
             "fullname": "Họ tên / Name",
             "birth": "Ngày sinh / D.O.B",
-            "expired_card": "Giá trị đến / Valid Thru",
+            "expired_card": "Giá trị đến / Valid Until",
             "number": "MSSV / ID No.",
         }
 
 
 class CardHUCE(Card):
     email: str
-    major_class: str
 
     @root_validator
     def make_card(cls, values):
@@ -136,7 +135,6 @@ class CardHUCE(Card):
             values["expired_card"] = re.findall(r"\d+", values["expired_card"])[-1]
             values["number"] = re.findall(r"\d+", values["number"])[-1]
             values["email"] = values["email"].split("Email:")[-1].strip()
-            values["major_class"] = values["major_class"].split("Class:")[-1].strip()
         except Exception as e:
             raise CustomHTTPException(error_type="detect_invalid", message=str(e))
         if values.get("school", "") != CardHUCE.get_detect_guide()["school"]:
@@ -172,7 +170,6 @@ class CardHUCE(Card):
             "expired_card": "Khóa học / Course: 20-20",
             "number": "MSSV / ID No.",
             "email": "Email: @nuce.edu.vn",
-            "major_class": "Lớp / Class:",
         }
 
 
@@ -272,7 +269,6 @@ if __name__ == "__main__":
         expired_card="Khóa học / Course: 2011-2033",
         number="MSSV / ID No. 123123",
         email="Email: fffff@nuce.edu.vn",
-        major_class="Lớp / Class: sdf",
         fullname="tran cong hoang",
         birth="1/2/2003",
     )

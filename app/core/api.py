@@ -30,6 +30,39 @@ class AccountApi(BaseAPIModel):
     VERIFY = "/account/verify"
 
 
+class ClubApi(BaseAPIModel):
+    CLUB_GET = "/club/get"
+    CLUB_CREATE = "/club/create"
+    CLUB_UPDATE = "/club/update"
+    CLUB_DELETE = "/club/delete"
+    CLUB_GETALL = "/club/get-all"
+    GROUP_GET = "/club/group/get"
+    GROUP_CREATE = "/club/group/create"
+    GROUP_UPDATE = "/club/group/update"
+    GROUP_DELETE = "/club/group/delete"
+    GROUP_GETALL = "/club/group/get-all"
+    MEMBER_GET = "/club/member/get"
+    MEMBER_CREATE = "/club/member/create"
+    MEMBER_UPDATE = "/club/member/update"
+    MEMBER_UPDATE_GROUP = "/club/member/update-group"
+    MEMBER_DELETE = "/club/member/delete"
+    MEMBER_GETALL = "/club/member/get-all"
+    FOLLOW_GET = "/club/follow/get"
+    FOLLOW_CREATE = "/club/follow/create"
+    FOLLOW_UPDATE = "/club/follow/update"
+    FOLLOW_DELETE = "/club/follow/delete"
+    FOLLOW_GETALL = "/club/follow/get-all"
+
+
+class ClusterApi(BaseAPIModel):
+    VECTORIZE = "/cluster/vectorize"
+    CLUSTERING = "/cluster/clustering"
+
+
+class ImageApi(BaseAPIModel):
+    GET = "/image/get"
+
+
 ALLOW_ALL = ["*"]
 
 API_PERMISSION = {
@@ -40,11 +73,35 @@ API_PERMISSION = {
     AccountApi.ABOUT_ME: [Role.ADMIN, Role.USER],
     AccountApi.ACTIVE: ALLOW_ALL,
     AccountApi.VERIFY: ALLOW_ALL,
-    AccountApi.GET_ALL: [Role.ADMIN, Role.USER],
-    AccountApi.GET: [Role.ADMIN, Role.USER],
+    AccountApi.GET_ALL: ALLOW_ALL,
+    AccountApi.GET: ALLOW_ALL,
     AccountApi.UPDATE_PROFILE: [Role.ADMIN, Role.USER],
     AccountApi.NOTIFICATION: [Role.ADMIN, Role.USER],
     AccountApi.DISABLE_ACCOUNT: [Role.ADMIN],
+    ClusterApi.VECTORIZE: ALLOW_ALL,
+    ClusterApi.CLUSTERING: ALLOW_ALL,
+    ClubApi.CLUB_GET: ALLOW_ALL,
+    ClubApi.CLUB_CREATE: [Role.ADMIN, Role.USER],
+    ClubApi.CLUB_UPDATE: [Role.ADMIN, Role.USER],
+    ClubApi.CLUB_DELETE: [Role.ADMIN, Role.USER],
+    ClubApi.CLUB_GETALL: ALLOW_ALL,
+    ClubApi.GROUP_GET: ALLOW_ALL,
+    ClubApi.GROUP_CREATE: [Role.ADMIN, Role.USER],
+    ClubApi.GROUP_UPDATE: [Role.ADMIN, Role.USER],
+    ClubApi.GROUP_DELETE: [Role.ADMIN, Role.USER],
+    ClubApi.GROUP_GETALL: ALLOW_ALL,
+    ClubApi.MEMBER_GET: ALLOW_ALL,
+    ClubApi.MEMBER_CREATE: [Role.ADMIN, Role.USER],
+    ClubApi.MEMBER_UPDATE: [Role.ADMIN, Role.USER],
+    ClubApi.MEMBER_UPDATE_GROUP: [Role.ADMIN, Role.USER],
+    ClubApi.MEMBER_DELETE: [Role.ADMIN, Role.USER],
+    ClubApi.MEMBER_GETALL: ALLOW_ALL,
+    ClubApi.FOLLOW_GET: ALLOW_ALL,
+    ClubApi.FOLLOW_CREATE: [Role.ADMIN, Role.USER],
+    ClubApi.FOLLOW_UPDATE: [Role.ADMIN, Role.USER],
+    ClubApi.FOLLOW_DELETE: [Role.ADMIN, Role.USER],
+    ClubApi.FOLLOW_GETALL: ALLOW_ALL,
+    ImageApi.GET: ALLOW_ALL,
 }
 
 WHITE_LIST_PATH = [

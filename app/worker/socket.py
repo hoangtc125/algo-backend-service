@@ -2,7 +2,7 @@ import asyncio
 import threading
 import traceback
 from collections import deque
-from typing import Any
+from typing import Any, List
 
 from app.core.socket import socket_connection
 from app.core.model import SocketPayload
@@ -43,6 +43,14 @@ class SocketWorker:
         while not self.__is_locked:
             self.__is_locked = True
             self.__input_data_queue.append(socket_payload)
+            self.__is_locked = False
+            self.__flag_event.set()
+            return None
+
+    def push_many(self, socket_payloads: List[SocketPayload]):
+        while not self.__is_locked:
+            self.__is_locked = True
+            self.__input_data_queue.extend(socket_payloads)
             self.__is_locked = False
             self.__flag_event.set()
             return None

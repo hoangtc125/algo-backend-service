@@ -55,6 +55,42 @@
         "account_not_exist": {
             "code": 5000,
             "message": "Tài khoản không tồn tại"
+        },
+        "password_miss_match": {
+            "code": 5001,
+            "message": "Mật khẩu cũ không chính xác"
+        },
+        "account_not_allowed": {
+            "code": 5002,
+            "message": "Tài khoản không thể thực hiện tính năng này"
+        },
+        "club_not_exist": {
+            "code": 6000,
+            "message": "Club không tồn tại"
+        },
+        "group_not_exist": {
+            "code": 6001,
+            "message": "Nhóm không tồn tại"
+        },
+        "member_not_exist": {
+            "code": 6002,
+            "message": "Thành viên không tồn tại"
+        },
+        "member_invalid_action": {
+            "code": 6003,
+            "message": "Thành viên không có quyền thực hiện"
+        },
+        "already_follow": {
+            "code": 6004,
+            "message": "Đã quan tâm Câu lạc bộ này"
+        },
+        "not_follow": {
+            "code": 6005,
+            "message": "Chưa quan tâm Câu lạc bộ này"
+        },
+        "member_exist": {
+            "code": 6006,
+            "message": "Thành viên đã tồn tại"
         }
     }
 }

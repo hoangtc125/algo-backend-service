@@ -12,6 +12,7 @@ class BaseAccount(BaseModel):
     verify: Optional[dict] = {
         "status": False,
         "type": None,
+        "image": "",
         "detail": {
             "school": "",
             "major": "",
@@ -47,9 +48,14 @@ class AccountResponse(Account):
     id: str
 
 
-class PasswordUpdate(BaseModel):
+class PasswordReset(BaseModel):
     token: str
     password: str
+
+
+class PasswordUpdate(BaseModel):
+    password: str
+    newpassword: str
 
 
 if __name__ == "__main__":
