@@ -16,7 +16,8 @@ from app.core.constant import Queue
 from app.core.model import SocketPayload
 from app.core.terminal import server_info, services_info
 from app.model.notification import SocketNotification
-from app.router.detect import router as detect_router
+
+# from app.router.detect import router as detect_router
 from app.router.account import router as account_router
 from app.router.image import router as image_router
 
@@ -179,7 +180,7 @@ def test_rabbitmq(socket_payload: SocketNotification):
     )
 
 
-app.include_router(detect_router)
+# app.include_router(detect_router)
 app.include_router(account_router)
 app.include_router(image_router)
 app.include_router(cluster_router)

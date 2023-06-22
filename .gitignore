@@ -2,7 +2,7 @@
 __pycache__/
 .venv
 .env
-docker/mongodb
+mongodb
 docker/rabbitmq
 docker/grafana
 docker/log
