@@ -2,11 +2,11 @@ import os
 import base64
 import difflib
 import re
-import cv2
 import numpy as np
 from google.cloud import vision
 from typing import Dict, List
-from pyzbar.pyzbar import decode
+
+# from pyzbar.pyzbar import decode
 
 from app.core.config import project_config
 from app.core.exception import CustomHTTPException
@@ -53,19 +53,20 @@ def detect_text_from_base64(image_base64: str):
 
 
 def detect_code_from_base64(image_base64: str):
-    decoded_data = base64.b64decode(image_base64)
-    np_data = np.frombuffer(decoded_data, dtype=np.uint8)
-    img = cv2.imdecode(np_data, cv2.IMREAD_COLOR)
-    img = cv2.GaussianBlur(img, (5, 5), 0)  # Làm mờ ảnh để loại bỏ noise
-    gray_img = cv2.cvtColor(
-        img, cv2.COLOR_BGR2GRAY
-    )  # Chuyển sang ảnh xám để dễ dàng nhận diện
-    alpha = 1.5  # giá trị alpha tăng độ sáng
-    beta = 0  # giá trị beta tăng độ sáng
-    bright_img = cv2.convertScaleAbs(gray_img, alpha=alpha, beta=beta)
-    barcodes = decode(bright_img)  # Nhận diện mã vạch
-    barcode_list = [barcode.data.decode() for barcode in barcodes]
-    return barcode_list
+    #     decoded_data = base64.b64decode(image_base64)
+    #     np_data = np.frombuffer(decoded_data, dtype=np.uint8)
+    #     img = cv2.imdecode(np_data, cv2.IMREAD_COLOR)
+    #     img = cv2.GaussianBlur(img, (5, 5), 0)  # Làm mờ ảnh để loại bỏ noise
+    #     gray_img = cv2.cvtColor(
+    #         img, cv2.COLOR_BGR2GRAY
+    #     )  # Chuyển sang ảnh xám để dễ dàng nhận diện
+    #     alpha = 1.5  # giá trị alpha tăng độ sáng
+    #     beta = 0  # giá trị beta tăng độ sáng
+    #     bright_img = cv2.convertScaleAbs(gray_img, alpha=alpha, beta=beta)
+    #     barcodes = decode(bright_img)  # Nhận diện mã vạch
+    #     barcode_list = [barcode.data.decode() for barcode in barcodes]
+    #     return barcode_list
+    return None
 
 
 def make_card_hust(info_list):
