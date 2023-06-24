@@ -1,0 +1,9 @@
+FROM hoangtc125admin/algo:env
+
+WORKDIR /algo
+
+COPY . /algo/
+
+EXPOSE 8001
+
+CMD ["bash", "command/server.sh"]
