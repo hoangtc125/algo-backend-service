@@ -8,6 +8,8 @@ from app.core.constant import (
     ClubRequestStatus,
     ClubType,
     GroupType,
+    RoundType,
+    ProcessStatus,
 )
 from app.core.model import BaseAuditModel
 
@@ -144,12 +146,13 @@ class ClubEvent(BaseAuditModel):
     active_round: str
     start_time: int
     end_time: int
-    status: str = None
+    status: str = ProcessStatus.NOT_BEGIN
     type: str = EventType.RECRUIT
 
 
 class CLubEventResponse(ClubEvent):
     id: str
+    rounds: Optional[Any] = []
 
 
 class Round(BaseAuditModel):
@@ -157,22 +160,12 @@ class Round(BaseAuditModel):
     event_id: str
     name: str
     description: str
-    status: str = None
-
-
-class FormRound(Round):
+    status: str = ProcessStatus.NOT_BEGIN
     form_question_id: Optional[str] = None
+    kind: str = RoundType.FORM
 
 
-class FormRoundResponse(FormRound):
-    id: str
-
-
-class InterviewRound(Round):
-    pass
-
-
-class InterviewRoundResponse(InterviewRound):
+class RoundResponse(Round):
     id: str
 
 
@@ -183,7 +176,7 @@ class Participant(BaseAuditModel):
     name: str
     photo_url: Optional[str] = None
     user_id: Optional[str] = None
-    status: bool = True
+    approve: bool = True
 
 
 class ParticipantResponse(Participant):
@@ -191,9 +184,11 @@ class ParticipantResponse(Participant):
 
 
 class FormQuestion(BaseAuditModel):
-    club_id: str
-    event_id: str
+    club_id: Optional[str] = None
+    event_id: Optional[str] = None
+    round_id: Optional[str] = None
     sections: List = []
+    kind: str = "private"
 
 
 class FormQuestionResponse(FormQuestion):
@@ -202,7 +197,8 @@ class FormQuestionResponse(FormQuestion):
 
 class FormAnswer(FormQuestion):
     form_id: str
-    participant_id: str
+    participant_id: Optional[str] = None
+    user_id: Optional[str] = None
 
 
 class FormAnswerResponse(FormAnswer):

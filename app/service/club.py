@@ -2,7 +2,7 @@ from typing import Dict
 
 from app.core.exception import CustomHTTPException
 from app.core.model import SocketPayload
-from app.core.constant import NotiKind
+from app.core.constant import NotiKind, ProcessStatus
 from app.core.config import project_config
 from app.service.image import ImageService
 from app.model.account import Account, AccountResponse
@@ -43,6 +43,48 @@ class ClubService:
         )
         self.follow_repo = get_repo(
             ClubFollower,
+            url=project_config.MONGO_URL,
+            db=project_config.MONGO_DB,
+            new_connection=False,
+        )
+        self.event_repo = get_repo(
+            ClubEvent,
+            url=project_config.MONGO_URL,
+            db=project_config.MONGO_DB,
+            new_connection=False,
+        )
+        self.round_repo = get_repo(
+            Round,
+            url=project_config.MONGO_URL,
+            db=project_config.MONGO_DB,
+            new_connection=False,
+        )
+        self.participant_repo = get_repo(
+            Participant,
+            url=project_config.MONGO_URL,
+            db=project_config.MONGO_DB,
+            new_connection=False,
+        )
+        self.form_question_repo = get_repo(
+            FormQuestion,
+            url=project_config.MONGO_URL,
+            db=project_config.MONGO_DB,
+            new_connection=False,
+        )
+        self.form_answer_repo = get_repo(
+            FormAnswer,
+            url=project_config.MONGO_URL,
+            db=project_config.MONGO_DB,
+            new_connection=False,
+        )
+        self.shift_repo = get_repo(
+            Shift,
+            url=project_config.MONGO_URL,
+            db=project_config.MONGO_DB,
+            new_connection=False,
+        )
+        self.appointment_repo = get_repo(
+            Appointment,
             url=project_config.MONGO_URL,
             db=project_config.MONGO_DB,
             new_connection=False,
@@ -89,6 +131,30 @@ class ClubService:
         if not group:
             raise CustomHTTPException("member_invalid_action")
         return (club, member)
+
+    async def verify_event_owner(self, event_id: str, actor: str):
+        event = await self.get_club({"_id": event_id})
+        if not event:
+            raise CustomHTTPException("event_not_exist")
+        member = await self.get_member(
+            {
+                "club_id": event.club_id,
+                "user_id": actor,
+            }
+        )
+        if not member:
+            raise CustomHTTPException("member_not_exist")
+        if event.group_id not in member.group_id:
+            admin_group = await self.get_group(
+                {
+                    "club_id": event.club_id,
+                    "_id": {"$in": member.group_id},
+                    "is_remove": False,
+                }
+            )
+            if not admin_group:
+                raise CustomHTTPException("member_invalid_action")
+        return (event, member)
 
     async def get_club_min(self, query: Dict):
         res = await self.club_repo.get_one(query)
@@ -432,3 +498,271 @@ class ClubService:
                 mapping["club"] = club
 
         return (list(member_club_mapping.values()), list(follow_club_mapping.values()))
+
+    # ========================================================
+
+    async def get_event_min(self, query: Dict):
+        res = await self.event_repo.get_one(query)
+        if not res:
+            return None
+        id, event = res
+        return to_response_dto(id, event, CLubEventResponse)
+
+    async def get_all_event_min(self, **kargs):
+        events = await self.event_repo.get_all(**kargs)
+        res = []
+        for doc_id, uv in events.items():
+            res.append(to_response_dto(doc_id, uv, CLubEventResponse))
+        return res
+
+    async def get_event(self, query: Dict):
+        res = await self.event_repo.get_one(query)
+        if not res:
+            return None
+        id, event = res
+        rounds = await self.get_all_round(
+            query={"event_id": id, "club_id": event.club_id}
+        )
+        return CLubEventResponse(id=id, rounds=rounds, **get_dict(event))
+
+    async def get_all_event(self, **kargs):
+        events = await self.event_repo.get_all(**kargs)
+        res = []
+        for doc_id, event in events.items():
+            rounds = await self.get_all_round(
+                query={"event_id": id, "club_id": event.club_id}
+            )
+            res.append(CLubEventResponse(id=doc_id, rounds=rounds, **get_dict(event)))
+        return res
+
+    async def create_algo_event(self, event: ClubEvent) -> CLubEventResponse:
+        check_event = await self.get_event_min(
+            {"club_id": event.club_id, "status": ProcessStatus.ON}
+        )
+        if check_event:
+            raise CustomHTTPException("another_recruit_event_on")
+        inserted_id = await self.event_repo.insert(event)
+        form_round = Round(
+            club_id=event.club_id,
+            event_id=inserted_id,
+            name="Vòng đơn",
+            description="Vòng đơn thu thập thông tin tuyển thành viên",
+            status=ProcessStatus.NOT_BEGIN,
+            kind=RoundType.FORM,
+        )
+        interview_round = Round(
+            club_id=event.club_id,
+            event_id=inserted_id,
+            name="Vòng phỏng vấn",
+            description="Vòng phỏng vấn ứng viên",
+            status=ProcessStatus.NOT_BEGIN,
+            kind=RoundType.INTERVIEW,
+        )
+        groups_id = await self.round_repo.insert_many(
+            [
+                {
+                    "custom_id": None,
+                    "obj": form_round,
+                },
+                {
+                    "custom_id": None,
+                    "obj": interview_round,
+                },
+            ]
+        )
+        return CLubEventResponse(
+            id=inserted_id,
+            rounds=[
+                RoundResponse(id=groups_id[0], **get_dict(form_round)),
+                RoundResponse(id=groups_id[1], **get_dict(interview_round)),
+            ],
+            **get_dict(event),
+        )
+
+    async def update_algo_event(self, event_id: str, actor: str, data: Dict):
+        event, _ = await self.verify_event_owner(event_id=event_id, actor=actor)
+        doc_id = await self.event_repo.update_by_id(event_id, data)
+        notification = Notification(
+            content=f"Sự kiện {event.name} đã được cập nhật vào lúc {to_datestring(get_current_timestamp())}",
+            to=actor,
+            kind=NotiKind.SUCCESS,
+        )
+        socket_worker.push(
+            SocketPayload(
+                **get_dict(SocketNotification(client_id=actor, data=notification))
+            )
+        )
+        return doc_id
+
+    # ========================================================
+
+    async def get_round(self, query: Dict):
+        res = await self.round_repo.get_one(query)
+        if not res:
+            return None
+        id, round = res
+        return to_response_dto(id, round, RoundResponse)
+
+    async def get_all_round(self, **kargs):
+        rounds = await self.round_repo.get_all(**kargs)
+        res = []
+        for doc_id, uv in rounds.items():
+            res.append(to_response_dto(doc_id, uv, RoundResponse))
+        return res
+
+    async def update_algo_round(
+        self, event_id: str, round_id: str, actor: str, data: Dict
+    ):
+        event, _ = await self.verify_event_owner(event_id=event_id, actor=actor)
+        doc_id = await self.round_repo.update_by_id(round_id, data)
+        notification = Notification(
+            content=f"Sự kiện {event.name} đã được cập nhật vào lúc {to_datestring(get_current_timestamp())}",
+            to=actor,
+            kind=NotiKind.SUCCESS,
+        )
+        socket_worker.push(
+            SocketPayload(
+                **get_dict(SocketNotification(client_id=actor, data=notification))
+            )
+        )
+        return doc_id
+
+    # ========================================================
+
+    async def get_participant(self, query: Dict):
+        res = await self.participant_repo.get_one(query)
+        if not res:
+            return None
+        id, participant = res
+        return to_response_dto(id, participant, ParticipantResponse)
+
+    async def get_all_participant(self, **kargs):
+        participants = await self.participant_repo.get_all(**kargs)
+        res = []
+        for doc_id, uv in participants.items():
+            res.append(to_response_dto(doc_id, uv, ParticipantResponse))
+        return res
+
+    async def create_one_participant(self, participant: Participant):
+        doc_id = await self.participant_repo.insert(participant)
+        return doc_id
+
+    async def create_many_participant(self, participants: List[Participant]):
+        doc_ids = await self.participant_repo.insert_many(
+            [{"obj": participant} for participant in participants]
+        )
+        return doc_ids
+
+    async def update_algo_participant(
+        self, event_id: str, participant_id: str, actor: str, data: Dict
+    ):
+        event, _ = await self.verify_event_owner(event_id=event_id, actor=actor)
+        doc_id = await self.participant_repo.update_by_id(participant_id, data)
+        return doc_id
+
+    # ========================================================
+
+    async def get_form_question(self, query: Dict):
+        res = await self.form_question_repo.get_one(query)
+        if not res:
+            return None
+        id, form_question = res
+        return to_response_dto(id, form_question, FormQuestionResponse)
+
+    async def get_all_form_question(self, **kargs):
+        form_questions = await self.form_question_repo.get_all(**kargs)
+        res = []
+        for doc_id, uv in form_questions.items():
+            res.append(to_response_dto(doc_id, uv, FormQuestionResponse))
+        return res
+
+    async def create_form_question(self, form_question: FormQuestion):
+        doc_id = await self.form_question_repo.insert(form_question)
+        return doc_id
+
+    async def update_algo_form_question(
+        self, event_id: str, form_question_id: str, actor: str, data: Dict
+    ):
+        event, _ = await self.verify_event_owner(event_id=event_id, actor=actor)
+        doc_id = await self.form_question_repo.update_by_id(form_question_id, data)
+        return doc_id
+
+    # ========================================================
+
+    async def get_form_answer(self, query: Dict):
+        res = await self.form_answer_repo.get_one(query)
+        if not res:
+            return None
+        id, form_answer = res
+        return to_response_dto(id, form_answer, FormAnswerResponse)
+
+    async def get_all_form_answer(self, **kargs):
+        form_answers = await self.form_answer_repo.get_all(**kargs)
+        res = []
+        for doc_id, uv in form_answers.items():
+            res.append(to_response_dto(doc_id, uv, FormAnswerResponse))
+        return res
+
+    async def create_form_answer(self, form_answer: FormAnswer):
+        event_check = await self.get_event_min({"_id": form_answer.club_id})
+        if event_check.status != ProcessStatus.ON:
+            raise CustomHTTPException("form_closed")
+        round_check = await self.get_round({"_id": form_answer.round_id})
+        if round_check.status != ProcessStatus.ON:
+            raise CustomHTTPException("form_closed")
+        if not participant_id:
+            participant_id = await self.create_one_participant(
+                Participant(
+                    club_id=form_answer.club_id,
+                    event_id=form_answer.event_id,
+                    email=form_answer.sections[0]["data"][0]["answer"],
+                    name=form_answer.sections[0]["data"][1]["answer"],
+                    user_id=form_answer.user_id,
+                )
+            )
+            form_answer.participant_id = participant_id
+        doc_id = await self.form_answer_repo.insert(form_answer)
+        return doc_id
+
+    # ========================================================
+
+    async def get_all_shift(self, **kargs):
+        shifts = await self.shift_repo.get_all(**kargs)
+        res = []
+        for doc_id, uv in shifts.items():
+            res.append(to_response_dto(doc_id, uv, ShiftResponse))
+        return res
+
+    async def create_shift(self, shift: Shift):
+        doc_id = await self.shift_repo.insert(shift)
+        return doc_id
+
+    async def udpate_shift(self, event_id: str, shift_id: str, actor: str, data: Dict):
+        event, _ = await self.verify_event_owner(event_id=event_id, actor=actor)
+        doc_id = await self.shift_repo.update_by_id(shift_id, data)
+        return doc_id
+
+    async def delete_shift(self, event_id: str, shift_id: str, actor: str):
+        event, _ = await self.verify_event_owner(event_id=event_id, actor=actor)
+        doc_id = await self.shift_repo.delete({"_id": shift_id})
+        return doc_id
+
+    # ========================================================
+
+    async def get_all_appointment(self, **kargs):
+        appointments = await self.appointment_repo.get_all(**kargs)
+        res = []
+        for doc_id, uv in appointments.items():
+            res.append(to_response_dto(doc_id, uv, AppointmentResponse))
+        return res
+
+    async def create_appointment(self, appointment: Appointment):
+        doc_id = await self.appointment_repo.insert(appointment)
+        return doc_id
+
+    async def udpate_appointment(
+        self, event_id: str, appointment_id: str, actor: str, data: Dict
+    ):
+        event, _ = await self.verify_event_owner(event_id=event_id, actor=actor)
+        doc_id = await self.appointment_repo.update_by_id(appointment_id, data)
+        return doc_id
