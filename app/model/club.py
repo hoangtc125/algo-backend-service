@@ -143,7 +143,7 @@ class ClubEvent(BaseAuditModel):
     group_id: str
     name: str
     description: str
-    active_round: str
+    active_round: Optional[str] = None
     start_time: int
     end_time: int
     status: str = ProcessStatus.NOT_BEGIN
@@ -153,6 +153,8 @@ class ClubEvent(BaseAuditModel):
 class CLubEventResponse(ClubEvent):
     id: str
     rounds: Optional[Any] = []
+    owners: Optional[Any] = []
+    club: Optional[Any] = None
 
 
 class Round(BaseAuditModel):

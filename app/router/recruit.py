@@ -20,6 +20,16 @@ from app.worker.notification import notification_worker
 router = APIRouter()
 
 
+@router.get(RecruitApi.CHECK_PERMISSION)
+async def check_permission(
+    event_id: str,
+    token: str = Depends(oauth2_scheme),
+    actor: str = Depends(get_actor_from_request),
+):
+    await ClubService().verify_event_owner(event_id=event_id, actor=actor)
+    return success_response(data=True)
+
+
 @router.get(RecruitApi.EVENT_GET)
 async def get_one_event(id: str):
     event = await ClubService().get_event({"_id": id})
@@ -100,13 +110,17 @@ async def get_all_round(
 
 @router.put(RecruitApi.ROUND_UPDATE, response_model=HttpResponse)
 async def update_round(
+    event_id: str,
     round_id: str,
     round_update: Dict,
     token: str = Depends(oauth2_scheme),
     actor: str = Depends(get_actor_from_request),
 ):
     res = await ClubService().update_algo_round(
-        round_id=round_id, actor=actor, data=round_update
+        round_id=round_id,
+        actor=actor,
+        data=round_update,
+        event_id=event_id,
     )
     return success_response(data=res)
 
@@ -140,7 +154,7 @@ async def get_all_form_question(
     return success_response(data=result)
 
 
-@router.put(RecruitApi.FORM_QUESTION_CREATE, response_model=HttpResponse)
+@router.post(RecruitApi.FORM_QUESTION_CREATE, response_model=HttpResponse)
 async def create_form_question(
     club_id: str,
     event_id: str,
@@ -205,6 +219,12 @@ async def create_form_question(
             round_id=round_id,
             sections=form_question.sections,
         )
+    await clubService.update_algo_round(
+        event_id=event_id,
+        round_id=round_id,
+        actor=actor,
+        data={"form_question_id": res},
+    )
     return success_response(data=res)
 
 

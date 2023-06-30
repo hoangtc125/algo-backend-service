@@ -55,6 +55,7 @@ class ClubApi(BaseAPIModel):
 
 
 class RecruitApi(BaseAPIModel):
+    CHECK_PERMISSION = "/recruit/check"
     EVENT_GET = "/recruit/event/get"
     EVENT_CREATE = "/recruit/event/create"
     EVENT_UPDATE = "/recruit/event/update"

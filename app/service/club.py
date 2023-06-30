@@ -133,7 +133,7 @@ class ClubService:
         return (club, member)
 
     async def verify_event_owner(self, event_id: str, actor: str):
-        event = await self.get_club({"_id": event_id})
+        event = await self.get_event_min({"_id": event_id})
         if not event:
             raise CustomHTTPException("event_not_exist")
         member = await self.get_member(
@@ -523,16 +523,30 @@ class ClubService:
         rounds = await self.get_all_round(
             query={"event_id": id, "club_id": event.club_id}
         )
-        return CLubEventResponse(id=id, rounds=rounds, **get_dict(event))
+        owners = await self.get_group({"_id": event.group_id})
+        club = await self.get_club_min({"_id": event.club_id})
+        return CLubEventResponse(
+            id=id, rounds=rounds, owners=owners.members, club=club, **get_dict(event)
+        )
 
     async def get_all_event(self, **kargs):
         events = await self.event_repo.get_all(**kargs)
         res = []
         for doc_id, event in events.items():
             rounds = await self.get_all_round(
-                query={"event_id": id, "club_id": event.club_id}
+                query={"event_id": doc_id, "club_id": event.club_id}
             )
-            res.append(CLubEventResponse(id=doc_id, rounds=rounds, **get_dict(event)))
+            owners = await self.get_group({"_id": event.group_id})
+            club = await self.get_club_min({"_id": event.club_id})
+            res.append(
+                CLubEventResponse(
+                    id=doc_id,
+                    rounds=rounds,
+                    owners=owners.members,
+                    club=club,
+                    **get_dict(event),
+                )
+            )
         return res
 
     async def create_algo_event(self, event: ClubEvent) -> CLubEventResponse:
@@ -570,12 +584,14 @@ class ClubService:
                 },
             ]
         )
+        owners = await self.get_group({"_id": event.group_id})
         return CLubEventResponse(
             id=inserted_id,
             rounds=[
                 RoundResponse(id=groups_id[0], **get_dict(form_round)),
                 RoundResponse(id=groups_id[1], **get_dict(interview_round)),
             ],
+            owners=owners.members,
             **get_dict(event),
         )
 
