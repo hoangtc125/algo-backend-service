@@ -183,6 +183,8 @@ class Participant(BaseAuditModel):
 
 class ParticipantResponse(Participant):
     id: str
+    user: Optional[Any] = None
+    photo: Optional[Any] = None
 
 
 class FormQuestion(BaseAuditModel):
@@ -195,6 +197,7 @@ class FormQuestion(BaseAuditModel):
 
 class FormQuestionResponse(FormQuestion):
     id: str
+    answers: Optional[Any] = []
 
 
 class FormAnswer(FormQuestion):

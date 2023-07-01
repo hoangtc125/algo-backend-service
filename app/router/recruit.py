@@ -249,3 +249,96 @@ async def update_form_question(
         event_id=event_id,
     )
     return success_response(data=res)
+
+
+# ==========================================================
+
+
+@router.get(RecruitApi.FORM_ANSWER_GET)
+async def get_one_form_answer(id: str):
+    form_answer = await ClubService().get_form_answer({"_id": id})
+    if not form_answer:
+        raise CustomHTTPException(error_type="unauthorized")
+    return success_response(data=form_answer)
+
+
+@router.post(RecruitApi.FORM_ANSWER_GETALL, response_model=HttpResponse)
+async def get_all_form_answer(
+    page_size: int = 20,
+    page_number: int = None,
+    query: Dict = {},
+    orderby: str = "created_at",
+    sort: SortOrder = Query(SortOrder.DESC),
+):
+    result = await ClubService().get_all_form_answer(
+        page_size=page_size,
+        page_number=page_number,
+        query=query,
+        orderby=orderby,
+        sort=sort.value,
+    )
+    return success_response(data=result)
+
+
+@router.post(RecruitApi.FORM_ANSWER_CREATE, response_model=HttpResponse)
+async def create_form_answer(
+    form_answer: FormAnswer,
+):
+    clubService = ClubService()
+    form_question_check = await clubService.form_question_repo.get_one_by_id(
+        form_answer.form_id
+    )
+    if not form_question_check:
+        raise CustomHTTPException("form_closed")
+    _, form_question = form_question_check
+    form_answer.club_id = form_question.club_id
+    form_answer.event_id = form_question.event_id
+    form_answer.round_id = form_question.round_id
+    res = await clubService.create_form_answer(form_answer)
+    return success_response(data=res)
+
+
+# ==========================================================
+
+
+@router.get(RecruitApi.PARTICIPANT_GET)
+async def get_one_participant(id: str):
+    participant = await ClubService().get_participant({"_id": id})
+    if not participant:
+        raise CustomHTTPException(error_type="unauthorized")
+    return success_response(data=participant)
+
+
+@router.post(RecruitApi.PARTICIPANT_GETALL, response_model=HttpResponse)
+async def get_all_participant(
+    page_size: int = 20,
+    page_number: int = None,
+    query: Dict = {},
+    orderby: str = "created_at",
+    sort: SortOrder = Query(SortOrder.DESC),
+):
+    result = await ClubService().get_all_participant(
+        page_size=page_size,
+        page_number=page_number,
+        query=query,
+        orderby=orderby,
+        sort=sort.value,
+    )
+    return success_response(data=result)
+
+
+@router.put(RecruitApi.PARTICIPANT_UPDATE, response_model=HttpResponse)
+async def update_participant(
+    participant_id: str,
+    event_id: str,
+    participant_update: Dict,
+    token: str = Depends(oauth2_scheme),
+    actor: str = Depends(get_actor_from_request),
+):
+    res = await ClubService().update_algo_participant(
+        participant_id=participant_id,
+        actor=actor,
+        data=participant_update,
+        event_id=event_id,
+    )
+    return success_response(data=res)

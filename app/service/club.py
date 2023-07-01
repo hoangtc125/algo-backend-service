@@ -650,13 +650,29 @@ class ClubService:
         if not res:
             return None
         id, participant = res
-        return to_response_dto(id, participant, ParticipantResponse)
+        user = photo = None
+        if participant.user_id:
+            user = await self.get_account({"_id": participant.user_id})
+        if participant.photo_url:
+            photo = await ImageService().get_image({"_id": participant.photo_url})
+        return ParticipantResponse(
+            id=id, user=user, photo=photo, **get_dict(participant)
+        )
 
     async def get_all_participant(self, **kargs):
         participants = await self.participant_repo.get_all(**kargs)
         res = []
-        for doc_id, uv in participants.items():
-            res.append(to_response_dto(doc_id, uv, ParticipantResponse))
+        for doc_id, participant in participants.items():
+            user = photo = None
+            if participant.user_id:
+                user = await self.get_account({"_id": participant.user_id})
+            if participant.photo_url:
+                photo = await ImageService().get_image({"_id": participant.photo_url})
+            res.append(
+                ParticipantResponse(
+                    id=doc_id, user=user, photo=photo, **get_dict(participant)
+                )
+            )
         return res
 
     async def create_one_participant(self, participant: Participant):
@@ -683,7 +699,15 @@ class ClubService:
         if not res:
             return None
         id, form_question = res
-        return to_response_dto(id, form_question, FormQuestionResponse)
+        answers = await self.get_all_form_answer(
+            query={
+                "club_id": form_question.club_id,
+                "event_id": form_question.event_id,
+                "round_id": form_question.round_id,
+                "form_id": id,
+            }
+        )
+        return FormQuestionResponse(id=id, answers=answers, **get_dict(form_question))
 
     async def get_all_form_question(self, **kargs):
         form_questions = await self.form_question_repo.get_all(**kargs)
@@ -724,13 +748,13 @@ class ClubService:
         return res
 
     async def create_form_answer(self, form_answer: FormAnswer):
-        event_check = await self.get_event_min({"_id": form_answer.club_id})
+        event_check = await self.get_event_min({"_id": form_answer.event_id})
         if event_check.status != ProcessStatus.ON:
             raise CustomHTTPException("form_closed")
         round_check = await self.get_round({"_id": form_answer.round_id})
         if round_check.status != ProcessStatus.ON:
             raise CustomHTTPException("form_closed")
-        if not participant_id:
+        if not form_answer.participant_id:
             participant_id = await self.create_one_participant(
                 Participant(
                     club_id=form_answer.club_id,
