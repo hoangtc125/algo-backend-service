@@ -692,8 +692,12 @@ class ClubService:
             res.append(to_response_dto(doc_id, uv, FormQuestionResponse))
         return res
 
-    async def create_form_question(self, form_question: FormQuestion):
-        doc_id = await self.form_question_repo.insert(form_question)
+    async def create_form_question(
+        self, form_question: FormQuestion, custom_id: str = None
+    ):
+        doc_id = await self.form_question_repo.insert(
+            form_question, custom_id=custom_id
+        )
         return doc_id
 
     async def update_algo_form_question(

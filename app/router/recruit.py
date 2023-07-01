@@ -1,3 +1,4 @@
+from uuid import uuid4
 from fastapi import APIRouter, Depends, Query
 from app.core.constant import SortOrder
 
@@ -159,12 +160,13 @@ async def create_form_question(
     club_id: str,
     event_id: str,
     round_id: str,
-    form_question_id: str = None,
+    form_question: Dict = None,
     token: str = Depends(oauth2_scheme),
     actor: str = Depends(get_actor_from_request),
 ):
     clubService = ClubService()
-    if not form_question_id:
+    custom_id = str(uuid4())
+    if not form_question:
         res = await clubService.create_form_question(
             FormQuestion(
                 club_id=club_id,
@@ -172,7 +174,7 @@ async def create_form_question(
                 round_id=round_id,
                 sections=[
                     {
-                        "id": "b62cd80f-7e84-4373-8f30-42ab09a34f5d",
+                        "id": custom_id,
                         "title": "Mẫu đơn tuyển thành viên",
                         "description": "Mẫu đơn tuyển thành viên cho các Câu lạc bộ học thuật về Công nghệ thông tin",
                         "data": [
@@ -209,15 +211,19 @@ async def create_form_question(
                         ],
                     }
                 ],
-            )
+            ),
+            custom_id=custom_id,
         )
     else:
-        form_question = await clubService.get_form_question({"_id": form_question_id})
+        form_question["sections"][0]["id"] = custom_id
         res = await clubService.create_form_question(
-            club_id=club_id,
-            event_id=event_id,
-            round_id=round_id,
-            sections=form_question.sections,
+            form_question=FormQuestion(
+                club_id=club_id,
+                event_id=event_id,
+                round_id=round_id,
+                sections=form_question["sections"],
+            ),
+            custom_id=custom_id,
         )
     await clubService.update_algo_round(
         event_id=event_id,
@@ -231,11 +237,15 @@ async def create_form_question(
 @router.put(RecruitApi.FORM_QUESTION_UPDATE, response_model=HttpResponse)
 async def update_form_question(
     form_question_id: str,
+    event_id: str,
     form_question_update: Dict,
     token: str = Depends(oauth2_scheme),
     actor: str = Depends(get_actor_from_request),
 ):
     res = await ClubService().update_algo_form_question(
-        form_question_id=form_question_id, actor=actor, data=form_question_update
+        form_question_id=form_question_id,
+        actor=actor,
+        data=form_question_update,
+        event_id=event_id,
     )
     return success_response(data=res)
