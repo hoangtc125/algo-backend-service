@@ -1,5 +1,6 @@
+import asyncio
 from uuid import uuid4
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, Query
 from app.core.constant import SortOrder
 
 from app.core.exception import CustomHTTPException
@@ -123,6 +124,37 @@ async def update_round(
         data=round_update,
         event_id=event_id,
     )
+    return success_response(data=res)
+
+
+def run_async_task(event_check, participants):
+    try:
+        loop = asyncio.get_event_loop()
+    except:
+        loop = asyncio.new_event_loop()
+    loop.run_until_complete(ClubService().end_form_round(event_check, participants))
+
+
+@router.put(RecruitApi.END_FORM_ROUND, response_model=HttpResponse)
+async def end_form_round(
+    event_id: str,
+    round_id: str,
+    background_tasks: BackgroundTasks,
+    token: str = Depends(oauth2_scheme),
+    actor: str = Depends(get_actor_from_request),
+):
+    clubService = ClubService()
+    res = await ClubService().update_algo_round(
+        round_id=round_id,
+        actor=actor,
+        data={"status": ProcessStatus.FINISHED},
+        event_id=event_id,
+    )
+    event_check = await clubService.get_event({"_id": event_id})
+    if not event_check:
+        raise CustomHTTPException("event_not_exist")
+    participants = await clubService.get_all_participant(query={"event_id": event_id})
+    background_tasks.add_task(run_async_task, event_check, participants)
     return success_response(data=res)
 
 
@@ -413,4 +445,44 @@ async def delete_shift(
         actor=actor,
         event_id=event_id,
     )
+    return success_response(data=res)
+
+
+# ==========================================================
+
+
+@router.get(RecruitApi.CLUSTER_GET)
+async def get_one_cluster(id: str):
+    cluster = await ClubService().get_cluster({"_id": id})
+    if not cluster:
+        raise CustomHTTPException(error_type="unauthorized")
+    return success_response(data=cluster)
+
+
+@router.post(RecruitApi.CLUSTER_GETALL, response_model=HttpResponse)
+async def get_all_cluster(
+    page_size: int = 20,
+    page_number: int = None,
+    query: Dict = {},
+    orderby: str = "created_at",
+    sort: SortOrder = Query(SortOrder.DESC),
+):
+    result = await ClubService().get_all_cluster(
+        page_size=page_size,
+        page_number=page_number,
+        query=query,
+        orderby=orderby,
+        sort=sort.value,
+    )
+    return success_response(data=result)
+
+
+@router.post(RecruitApi.CLUSTER_CREATE, response_model=HttpResponse)
+async def create_cluster(
+    cluster: Cluster,
+    token: str = Depends(oauth2_scheme),
+    actor: str = Depends(get_actor_from_request),
+):
+    clubService = ClubService()
+    res = await clubService.create_cluster(cluster, actor)
     return success_response(data=res)

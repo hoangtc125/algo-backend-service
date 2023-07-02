@@ -178,7 +178,7 @@ class Participant(BaseAuditModel):
     name: str
     photo_url: Optional[str] = None
     user_id: Optional[str] = None
-    approve: bool = True
+    approve: List[bool] = []
 
 
 class ParticipantResponse(Participant):
@@ -208,6 +208,7 @@ class FormAnswer(FormQuestion):
 
 class FormAnswerResponse(FormAnswer):
     id: str
+    participant: Optional[Any] = None
 
 
 class Shift(BaseAuditModel):
@@ -235,6 +236,18 @@ class Appointment(BaseAuditModel):
 
 
 class AppointmentResponse(Appointment):
+    id: str
+
+
+class Cluster(BaseAuditModel):
+    club_id: str
+    event_id: str
+    round_id: str
+    title: str
+    data: Dict = {}
+
+
+class ClusterResponse(Cluster):
     id: str
 
 

@@ -91,6 +91,12 @@ class RecruitApi(BaseAPIModel):
     APPOINTMENT_UPDATE = "/recruit/appointment/update"
     APPOINTMENT_DELETE = "/recruit/appointment/delete"
     APPOINTMENT_GETALL = "/recruit/appointment/get-all"
+    CLUSTER_GET = "/recruit/cluster/get"
+    CLUSTER_CREATE = "/recruit/cluster/create"
+    CLUSTER_UPDATE = "/recruit/cluster/update"
+    CLUSTER_DELETE = "/recruit/cluster/delete"
+    CLUSTER_GETALL = "/recruit/cluster/get-all"
+    END_FORM_ROUND = "/recruit/round/form/end"
 
 
 class ClusterApi(BaseAPIModel):

@@ -11,8 +11,10 @@ from app.model.club import *
 from app.repo.mongo import get_repo
 from app.util.model import get_dict, to_response_dto
 from app.util.time import get_current_timestamp, to_datestring
+from app.util.mail import make_mail_end_form_round, Email
 from app.worker.socket import socket_worker
 from app.worker.notification import notification_worker
+from app.worker.mail import mail_worker
 
 
 class ClubService:
@@ -85,6 +87,12 @@ class ClubService:
         )
         self.appointment_repo = get_repo(
             Appointment,
+            url=project_config.MONGO_URL,
+            db=project_config.MONGO_DB,
+            new_connection=False,
+        )
+        self.cluster_repo = get_repo(
+            Cluster,
             url=project_config.MONGO_URL,
             db=project_config.MONGO_DB,
             new_connection=False,
@@ -643,6 +651,20 @@ class ClubService:
         )
         return doc_id
 
+    async def end_form_round(self, event_check, participants):
+        mails = [
+            Email(
+                receiver_email=participant.email,
+                cc_email=[event_check.club.email],
+                subject="Thông báo kết quả vòng đơn ứng tuyển thành viên",
+                content=make_mail_end_form_round(
+                    event_check.club.name, participant.name, participant.approve[0]
+                ),
+            )
+            for participant in participants
+        ]
+        mail_worker.push_many(mails)
+
     # ========================================================
 
     async def get_participant(self, query: Dict):
@@ -738,13 +760,23 @@ class ClubService:
         if not res:
             return None
         id, form_answer = res
-        return to_response_dto(id, form_answer, FormAnswerResponse)
+        participant = await self.get_participant({"_id": form_answer.participant_id})
+        return FormAnswerResponse(
+            id=id, participant=participant, **get_dict(form_answer)
+        )
 
     async def get_all_form_answer(self, **kargs):
         form_answers = await self.form_answer_repo.get_all(**kargs)
         res = []
-        for doc_id, uv in form_answers.items():
-            res.append(to_response_dto(doc_id, uv, FormAnswerResponse))
+        for doc_id, form_answer in form_answers.items():
+            participant = await self.get_participant(
+                {"_id": form_answer.participant_id}
+            )
+            res.append(
+                FormAnswerResponse(
+                    id=doc_id, participant=participant, **get_dict(form_answer)
+                )
+            )
         return res
 
     async def create_form_answer(self, form_answer: FormAnswer):
@@ -762,6 +794,7 @@ class ClubService:
                     email=form_answer.sections[0]["data"][0]["answer"],
                     name=form_answer.sections[0]["data"][1]["answer"],
                     user_id=form_answer.user_id,
+                    approve=[False, False],
                 )
             )
             form_answer.participant_id = participant_id
@@ -810,4 +843,28 @@ class ClubService:
     ):
         event, _ = await self.verify_event_owner(event_id=event_id, actor=actor)
         doc_id = await self.appointment_repo.update_by_id(appointment_id, data)
+        return doc_id
+
+    # ========================================================
+
+    async def get_cluster(self, query: Dict):
+        res = await self.cluster_repo.get_one(query)
+        if not res:
+            return None
+        id, cluster = res
+        return to_response_dto(id, cluster, ClusterResponse)
+
+    async def get_all_cluster(self, **kargs):
+        clusters = await self.cluster_repo.get_all(**kargs)
+        res = []
+        for doc_id, uv in clusters.items():
+            res.append(to_response_dto(doc_id, uv, ClusterResponse))
+        return res
+
+    async def create_cluster(self, cluster: Cluster, actor: str):
+        event, _ = await self.verify_event_owner(event_id=cluster.event_id, actor=actor)
+        round_check = await self.get_round({"_id": cluster.round_id})
+        if round_check.status != ProcessStatus.PAUSE:
+            raise CustomHTTPException("round_not_finished")
+        doc_id = await self.cluster_repo.insert(cluster)
         return doc_id

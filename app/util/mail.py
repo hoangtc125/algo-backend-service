@@ -125,6 +125,31 @@ def send_mail(email: Email):
         server.quit()
 
 
+def send_many_mail(emails: List[Email]):
+    try:
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.ehlo()
+        server.starttls()
+        server.login(project_config.MAIL_USER, project_config.MAIL_PASS)
+
+        for email in emails:
+            try:
+                server.sendmail(
+                    project_config.MAIL_USER,
+                    email.receiver_email,
+                    email.message.as_string(),
+                )
+                print("Email sent to", email.receiver_email)
+            except Exception as e:
+                print("Error sending email to", email.receiver_email, ":", e)
+
+        server.quit()
+
+        print("All emails sent successfully!")
+    except Exception as e:
+        print("Error sending emails:", e)
+
+
 def make_mail_verify_account(card: Dict, url: str):
     return (
         EmailContent()
@@ -210,6 +235,28 @@ def make_mail_welcome():
             "Nếu bạn có bất kỳ câu hỏi hoặc yêu cầu hỗ trợ nào, đừng ngần ngại liên hệ với chúng tôi. Chúng tôi luôn sẵn lòng giúp đỡ bạn."
         )
         .p("Một lần nữa, chào mừng bạn đến với hệ thống của chúng tôi!")
+        .p("Trân trọng,")
+        .p("Ban quản trị.")
+        .make_html()
+    )
+
+
+def make_mail_end_form_round(club_name: str, participant_name: str, res: bool):
+    return (
+        EmailContent()
+        .h4("Kính gửi Anh/Chị,")
+        .p(
+            f"{club_name} xin trân trọng thông báo kết quả vòng đơn ứng tuyển thành viên của Anh/Chị. Sau quá trình xem xét và đánh giá kỹ lưỡng, chúng tôi xin thông báo kết quả như sau:"
+        )
+        .p(
+            f"- Anh/Chị {participant_name}: {res} (True: Được chọn, False: Không được chọn)"
+        )
+        .p(
+            f"Chúng tôi xin cảm ơn Anh/Chị đã quan tâm và tham gia quá trình ứng tuyển thành viên của {club_name}. Nếu Anh/Chị không được chọn, xin đừng nản lòng và hãy tiếp tục theo đuổi đam mê của mình. Nếu Anh/Chị đã được chọn, chúng tôi sẽ liên hệ trong thời gian sớm nhất để thông báo các bước tiếp theo."
+        )
+        .p(
+            f"Một lần nữa, xin chân thành cảm ơn Anh/Chị đã dành thời gian và quan tâm đến CLB!"
+        )
         .p("Trân trọng,")
         .p("Ban quản trị.")
         .make_html()

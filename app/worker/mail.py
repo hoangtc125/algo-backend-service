@@ -1,8 +1,9 @@
 import threading
 import traceback
+from typing import List
 from collections import deque
 
-from app.util.mail import Email, send_mail
+from app.util.mail import Email, send_mail, send_many_mail
 
 
 class MailWorker:
@@ -22,7 +23,10 @@ class MailWorker:
                 res = self.__get_latest_data()
                 if not res:
                     continue
-                send_mail(res)
+                if isinstance(res, Email):
+                    send_mail(res)
+                else:
+                    send_many_mail(res)
             except Exception as e:
                 traceback.print_exc()
 
@@ -30,6 +34,14 @@ class MailWorker:
         while not self.__is_locked:
             self.__is_locked = True
             self.__input_data_queue.append(email)
+            self.__is_locked = False
+            self.__flag_event.set()
+            return None
+
+    def push_many(self, email: List[Email]):
+        while not self.__is_locked:
+            self.__is_locked = True
+            self.__input_data_queue.extend(email)
             self.__is_locked = False
             self.__flag_event.set()
             return None
