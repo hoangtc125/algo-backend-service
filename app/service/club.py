@@ -777,7 +777,8 @@ class ClubService:
             res.append(to_response_dto(doc_id, uv, ShiftResponse))
         return res
 
-    async def create_shift(self, shift: Shift):
+    async def create_shift(self, shift: Shift, actor: str):
+        event, _ = await self.verify_event_owner(event_id=shift.event_id, actor=actor)
         doc_id = await self.shift_repo.insert(shift)
         return doc_id
 
@@ -788,8 +789,8 @@ class ClubService:
 
     async def delete_shift(self, event_id: str, shift_id: str, actor: str):
         event, _ = await self.verify_event_owner(event_id=event_id, actor=actor)
-        doc_id = await self.shift_repo.delete({"_id": shift_id})
-        return doc_id
+        await self.shift_repo.delete({"_id": shift_id})
+        return None
 
     # ========================================================
 

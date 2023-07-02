@@ -213,6 +213,7 @@ class FormAnswerResponse(FormAnswer):
 class Shift(BaseAuditModel):
     club_id: str
     event_id: str
+    round_id: str
     name: str
     start_time: int
     end_time: int

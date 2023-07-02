@@ -342,3 +342,75 @@ async def update_participant(
         event_id=event_id,
     )
     return success_response(data=res)
+
+
+# ==========================================================
+
+
+@router.get(RecruitApi.SHIFT_GET)
+async def get_one_shift(id: str):
+    shift = await ClubService().get_shift({"_id": id})
+    if not shift:
+        raise CustomHTTPException(error_type="unauthorized")
+    return success_response(data=shift)
+
+
+@router.post(RecruitApi.SHIFT_GETALL, response_model=HttpResponse)
+async def get_all_shift(
+    page_size: int = 20,
+    page_number: int = None,
+    query: Dict = {},
+    orderby: str = "created_at",
+    sort: SortOrder = Query(SortOrder.DESC),
+):
+    result = await ClubService().get_all_shift(
+        page_size=page_size,
+        page_number=page_number,
+        query=query,
+        orderby=orderby,
+        sort=sort.value,
+    )
+    return success_response(data=result)
+
+
+@router.post(RecruitApi.SHIFT_CREATE, response_model=HttpResponse)
+async def create_shift(
+    shift: Shift,
+    token: str = Depends(oauth2_scheme),
+    actor: str = Depends(get_actor_from_request),
+):
+    clubService = ClubService()
+    res = await clubService.create_shift(shift, actor)
+    return success_response(data=res)
+
+
+@router.put(RecruitApi.SHIFT_UPDATE, response_model=HttpResponse)
+async def update_shift(
+    shift_id: str,
+    event_id: str,
+    shift_update: Dict,
+    token: str = Depends(oauth2_scheme),
+    actor: str = Depends(get_actor_from_request),
+):
+    res = await ClubService().udpate_shift(
+        shift_id=shift_id,
+        actor=actor,
+        data=shift_update,
+        event_id=event_id,
+    )
+    return success_response(data=res)
+
+
+@router.delete(RecruitApi.SHIFT_DELETE, response_model=HttpResponse)
+async def delete_shift(
+    shift_id: str,
+    event_id: str,
+    token: str = Depends(oauth2_scheme),
+    actor: str = Depends(get_actor_from_request),
+):
+    res = await ClubService().delete_shift(
+        shift_id=shift_id,
+        actor=actor,
+        event_id=event_id,
+    )
+    return success_response(data=res)
