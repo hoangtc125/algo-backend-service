@@ -91,3 +91,10 @@ class EventType:
 class RoundType:
     FORM: str = "FORM"
     INTERVIEW: str = "INTERVIEW"
+
+
+class ProcessStatus:
+    NOT_BEGIN: str = "NOT_BEGIN"
+    ON: str = "ON"
+    PAUSE: str = "PAUSE"
+    FINISHED: str = "FINISHED"

@@ -17,12 +17,13 @@ from app.core.model import SocketPayload
 from app.core.terminal import server_info, services_info
 from app.model.notification import SocketNotification
 
-from app.router.detect import router as detect_router
+# from app.router.detect import router as detect_router
 from app.router.account import router as account_router
 from app.router.image import router as image_router
 
 from app.router.cluster import router as cluster_router
 from app.router.club import router as club_router
+from app.router.recruit import router as recruit_router
 from app.util.model import get_dict
 from app.worker.socket import socket_worker
 from app.queue.rabbitmq import rabbitmq
@@ -180,11 +181,12 @@ def test_rabbitmq(socket_payload: SocketNotification):
     )
 
 
-app.include_router(detect_router)
+# app.include_router(detect_router)
 app.include_router(account_router)
 app.include_router(image_router)
 app.include_router(cluster_router)
 app.include_router(club_router)
+app.include_router(recruit_router)
 
 if __name__ == "__main__":
     uvicorn.run(

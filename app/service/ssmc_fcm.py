@@ -501,7 +501,7 @@ class SSMC_FCM:
         plt.title("DB metric")
         plt.subplot(313)
         plt.plot(self.ASWC_metric)
-        plt.title("ASWS metric")
+        plt.title("ASWC metric")
         plt.tight_layout()
         plt.xticks(list(range(len(self.ASWC_metric))))
         buffer = io.BytesIO()
