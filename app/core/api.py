@@ -97,6 +97,7 @@ class RecruitApi(BaseAPIModel):
     CLUSTER_DELETE = "/recruit/cluster/delete"
     CLUSTER_GETALL = "/recruit/cluster/get-all"
     END_FORM_ROUND = "/recruit/round/form/end"
+    SEND_SHFIT_MAIL = "/recruit/shift/mail"
 
 
 class ClusterApi(BaseAPIModel):

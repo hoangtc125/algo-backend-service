@@ -263,5 +263,26 @@ def make_mail_end_form_round(club_name: str, participant_name: str, res: bool):
     )
 
 
+def make_shift_mail(club_name: str, participant_name: str, link: str):
+    return (
+        EmailContent()
+        .h4(f"Kính gửi {participant_name},")
+        .p(
+            f"Chúng tôi xin gửi lời mời cho bạn để tham gia khảo sát nguyện vọng phỏng vấn vào {club_name}"
+        )
+        .p(
+            f"Đây là một bước quan trọng trong quá trình tuyển dụng của chúng tôi và chúng tôi rất mong nhận được phản hồi từ bạn. Hãy dành chút thời gian để điền khảo sát này để chúng tôi có thể hiểu rõ hơn về nguyện vọng và kỹ năng của bạn."
+        )
+        .p(f"Vui lòng truy cập vào đường dẫn dưới đây để bắt đầu điền khảo sát")
+        .a(link, "Yêu cầu điền khảo sát nguyện vọng phỏng vấn")
+        .p(
+            f"Một lần nữa, xin chân thành cảm ơn Anh/Chị đã dành thời gian và quan tâm đến CLB!"
+        )
+        .p("Trân trọng,")
+        .p("Ban quản trị.")
+        .make_html()
+    )
+
+
 if __name__ == "__main__":
     print(is_valid_email("hoang.tc194060@sis.hust.edu.vn"))

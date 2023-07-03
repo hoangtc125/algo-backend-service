@@ -1,4 +1,5 @@
 from typing import Dict
+from uuid import uuid4
 
 from app.core.exception import CustomHTTPException
 from app.core.model import SocketPayload
@@ -11,7 +12,7 @@ from app.model.club import *
 from app.repo.mongo import get_repo
 from app.util.model import get_dict, to_response_dto
 from app.util.time import get_current_timestamp, to_datestring
-from app.util.mail import make_mail_end_form_round, Email
+from app.util.mail import make_mail_end_form_round, Email, make_shift_mail
 from app.worker.socket import socket_worker
 from app.worker.notification import notification_worker
 from app.worker.mail import mail_worker
@@ -564,6 +565,40 @@ class ClubService:
         if check_event:
             raise CustomHTTPException("another_recruit_event_on")
         inserted_id = await self.event_repo.insert(event)
+        custom_interview_round_id = str(uuid4())
+        form_interview_shift_id = str(uuid4())
+        await self.form_question_repo.insert(
+            FormQuestion(
+                club_id=event.club_id,
+                event_id=inserted_id,
+                round_id=custom_interview_round_id,
+                sections=[
+                    {
+                        "id": form_interview_shift_id,
+                        "title": "Thu thập nguyện vọng tham gia phỏng vấn",
+                        "description": "Biểu mẫu thông báo và thu thập thông tin thời gian ứng viên có thể tham gia phỏng vấn",
+                        "data": [
+                            {
+                                "id": "162b384f-b495-4c8a-b2d4-f3462c12147d",
+                                "value": "Chọn các kíp mà ứng viên có thể tham gia",
+                                "type": "select",
+                                "answer": "",
+                                "disabled": True,
+                                "required": True,
+                                "options": [
+                                    {
+                                        "id": "85000685-e1c5-4447-bb8f-3a541f45be7b",
+                                        "value": "",
+                                        "to": "",
+                                    }
+                                ],
+                            },
+                        ],
+                    }
+                ],
+            ),
+            custom_id=form_interview_shift_id,
+        )
         form_round = Round(
             club_id=event.club_id,
             event_id=inserted_id,
@@ -579,6 +614,7 @@ class ClubService:
             description="Vòng phỏng vấn ứng viên",
             status=ProcessStatus.NOT_BEGIN,
             kind=RoundType.INTERVIEW,
+            form_question_id=form_interview_shift_id,
         )
         groups_id = await self.round_repo.insert_many(
             [
@@ -587,7 +623,7 @@ class ClubService:
                     "obj": form_round,
                 },
                 {
-                    "custom_id": None,
+                    "custom_id": custom_interview_round_id,
                     "obj": interview_round,
                 },
             ]
@@ -819,6 +855,29 @@ class ClubService:
         event, _ = await self.verify_event_owner(event_id=event_id, actor=actor)
         doc_id = await self.shift_repo.update_by_id(shift_id, data)
         return doc_id
+
+    async def send_mail_shift(self, event_id: str, actor: str, form_question_id: str):
+        event_check = await self.get_event({"_id": event_id})
+        if not event_check:
+            raise CustomHTTPException("event_not_exist")
+        participants = await self.get_all_participant(
+            query={"event_id": event_id, "approve": [True, False]}
+        )
+        mails = [
+            Email(
+                receiver_email=participant.email,
+                cc_email=[event_check.club.email],
+                subject="Yêu cầu điền khảo sát nguyện vọng phỏng vấn",
+                content=make_shift_mail(
+                    event_check.club.name,
+                    participant.name,
+                    f"http://{project_config.HOST}:{project_config.FRONTEND_PORT}/algo-frontend-service/form-store/{form_question_id}/preview?participant_id={participant.id}",
+                ),
+            )
+            for participant in participants
+        ]
+        mail_worker.push_many(mails)
+        return None
 
     async def delete_shift(self, event_id: str, shift_id: str, actor: str):
         event, _ = await self.verify_event_owner(event_id=event_id, actor=actor)

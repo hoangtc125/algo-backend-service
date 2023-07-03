@@ -433,6 +433,21 @@ async def update_shift(
     return success_response(data=res)
 
 
+@router.put(RecruitApi.SEND_SHFIT_MAIL, response_model=HttpResponse)
+async def send_shift_mail(
+    event_id: str,
+    form_question_id: str,
+    token: str = Depends(oauth2_scheme),
+    actor: str = Depends(get_actor_from_request),
+):
+    res = await ClubService().send_mail_shift(
+        event_id=event_id,
+        actor=actor,
+        form_question_id=form_question_id,
+    )
+    return success_response(data=res)
+
+
 @router.delete(RecruitApi.SHIFT_DELETE, response_model=HttpResponse)
 async def delete_shift(
     shift_id: str,
