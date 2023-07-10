@@ -837,6 +837,31 @@ class ClubService:
         doc_id = await self.form_answer_repo.insert(form_answer)
         return doc_id
 
+    async def create_form_interview_schedule(self, form_answer: FormAnswer):
+        event_check = await self.get_event_min({"_id": form_answer.event_id})
+        if event_check.status != ProcessStatus.ON:
+            raise CustomHTTPException("form_closed")
+        round_check = await self.get_round({"_id": form_answer.round_id})
+        if round_check.status != ProcessStatus.ON:
+            raise CustomHTTPException("form_closed")
+        if not form_answer.participant_id:
+            raise CustomHTTPException("participant_not_exist")
+        form_answer_check = await self.get_form_answer(
+            {
+                "form_id": form_answer.form_id,
+                "round_id": form_answer.round_id,
+                "participant_id": form_answer.participant_id,
+            }
+        )
+        if form_answer_check:
+            doc_id = await self.form_answer_repo.update_by_id(
+                id=form_answer_check.id,
+                obj=get_dict(form_answer, allow_none=True),
+            )
+        else:
+            doc_id = await self.form_answer_repo.insert(form_answer)
+        return doc_id
+
     # ========================================================
 
     async def get_all_shift(self, **kargs):

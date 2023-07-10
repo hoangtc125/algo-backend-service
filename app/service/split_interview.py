@@ -47,3 +47,4 @@ if __name__ == "__main__":
     schedule = split_interview(appointments, [10, 10, 10, 10, 10, 10], auto_adjust=True)
     print("\n".join([f"{i}: {len(i)}" for i in schedule]))
     print([appointments[i] for i in schedule[-1]])
+    print(schedule)

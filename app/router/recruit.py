@@ -13,6 +13,7 @@ from app.service.club import ClubService
 from app.model.club import *
 from app.model.notification import Notification, SocketNotification
 from app.service.image import ImageService
+from app.service.split_interview import split_interview
 from app.util.auth import get_actor_from_request
 from app.util.model import get_dict
 from app.util.time import get_current_timestamp, to_datestring
@@ -313,9 +314,7 @@ async def get_all_form_answer(
 
 
 @router.post(RecruitApi.FORM_ANSWER_CREATE, response_model=HttpResponse)
-async def create_form_answer(
-    form_answer: FormAnswer,
-):
+async def create_form_answer(form_answer: FormAnswer, is_interview: bool = False):
     clubService = ClubService()
     form_question_check = await clubService.form_question_repo.get_one_by_id(
         form_answer.form_id
@@ -326,7 +325,10 @@ async def create_form_answer(
     form_answer.club_id = form_question.club_id
     form_answer.event_id = form_question.event_id
     form_answer.round_id = form_question.round_id
-    res = await clubService.create_form_answer(form_answer)
+    if not is_interview:
+        res = await clubService.create_form_answer(form_answer)
+    else:
+        res = await clubService.create_form_interview_schedule(form_answer)
     return success_response(data=res)
 
 
@@ -500,4 +502,28 @@ async def create_cluster(
 ):
     clubService = ClubService()
     res = await clubService.create_cluster(cluster, actor)
+    return success_response(data=res)
+
+
+@router.post(RecruitApi.SPLIT_INTERVIEW, response_model=HttpResponse)
+async def recruit_split_interview(
+    data: Dict = {
+        "appointments_dict": {},
+        "n_per_shift": [],
+        "shifts": [],
+    },
+    auto_adjust: bool = True,
+    is_test: bool = True,
+):
+    res = split_interview(
+        appointments_dict=data["appointments_dict"],
+        n_per_shift=data["n_per_shift"],
+        auto_adjust=auto_adjust,
+    )
+    clubService = ClubService()
+    if not is_test:
+        for candidates, shift in zip(res, data["shifts"]):
+            await clubService.shift_repo.update_by_id(
+                shift["id"], {"candidates": candidates}
+            )
     return success_response(data=res)

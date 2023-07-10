@@ -221,6 +221,7 @@ class Shift(BaseAuditModel):
     place: str
     place_position: Optional[Dict] = None
     capacity: int
+    candidates: Optional[List] = []
 
 
 class ShiftResponse(Shift):
