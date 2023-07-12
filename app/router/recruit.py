@@ -16,9 +16,11 @@ from app.service.image import ImageService
 from app.service.split_interview import split_interview
 from app.util.auth import get_actor_from_request
 from app.util.model import get_dict
-from app.util.time import get_current_timestamp, to_datestring
+from app.util.time import convert_timestamp
+from app.util.mail import Email, make_mail_interview
 from app.worker.socket import socket_worker
 from app.worker.notification import notification_worker
+from app.worker.mail import mail_worker
 
 router = APIRouter()
 
@@ -527,3 +529,40 @@ async def recruit_split_interview(
                 shift["id"], {"candidates": candidates}
             )
     return success_response(data=res)
+
+
+@router.post(RecruitApi.SEND_MAIL_INTERVIEW, response_model=HttpResponse)
+async def send_mail_interview(
+    club_id: str,
+    event_id: str,
+    round_id: str,
+    token: str = Depends(oauth2_scheme),
+    actor: str = Depends(get_actor_from_request),
+):
+    clubService = ClubService()
+    event_check = await clubService.get_event({"_id": event_id})
+    if not event_check:
+        raise CustomHTTPException("event_not_exist")
+    shifts = await clubService.get_all_shift(
+        query={"club_id": club_id, "event_id": event_id, "round_id": round_id}
+    )
+    for shift in shifts:
+        participants = await clubService.get_all_participant(
+            query={"_id": {"$in": shift.candidates}}
+        )
+        appointment = f"{shift.name} | {shift.place} | {convert_timestamp(int(shift.start_time))} - {convert_timestamp(int(shift.end_time))}"
+        mails = [
+            Email(
+                receiver_email=participant.email,
+                cc_email=[event_check.club.email],
+                subject="Hẹn phỏng vấn ứng viên",
+                content=make_mail_interview(
+                    event_check.club.name,
+                    participant.name,
+                    appointment,
+                ),
+            )
+            for participant in participants
+        ]
+        mail_worker.push_many(mails)
+    return success_response()

@@ -614,7 +614,7 @@ class ClubService:
             description="Vòng phỏng vấn ứng viên",
             status=ProcessStatus.NOT_BEGIN,
             kind=RoundType.INTERVIEW,
-            form_question_id=form_interview_shift_id,
+            shift_question_id=form_interview_shift_id,
         )
         groups_id = await self.round_repo.insert_many(
             [
@@ -711,11 +711,7 @@ class ClubService:
         user = photo = None
         if participant.user_id:
             user = await self.get_account({"_id": participant.user_id})
-        if participant.photo_url:
-            photo = await ImageService().get_image({"_id": participant.photo_url})
-        return ParticipantResponse(
-            id=id, user=user, photo=photo, **get_dict(participant)
-        )
+        return ParticipantResponse(id=id, user=user, **get_dict(participant))
 
     async def get_all_participant(self, **kargs):
         participants = await self.participant_repo.get_all(**kargs)
@@ -724,12 +720,8 @@ class ClubService:
             user = photo = None
             if participant.user_id:
                 user = await self.get_account({"_id": participant.user_id})
-            if participant.photo_url:
-                photo = await ImageService().get_image({"_id": participant.photo_url})
             res.append(
-                ParticipantResponse(
-                    id=doc_id, user=user, photo=photo, **get_dict(participant)
-                )
+                ParticipantResponse(id=doc_id, user=user, **get_dict(participant))
             )
         return res
 

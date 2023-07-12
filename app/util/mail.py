@@ -284,5 +284,28 @@ def make_shift_mail(club_name: str, participant_name: str, link: str):
     )
 
 
+def make_mail_interview(club_name: str, participant_name: str, value: str):
+    return (
+        EmailContent()
+        .h4(f"Kính gửi {participant_name},")
+        .p(
+            f"Chúng tôi xin gửi lời chào tới bạn và xin cảm ơn bạn đã quan tâm đến câu lạc bộ của chúng tôi. Chúng tôi đã xem xét thông tin đăng ký của bạn và rất vui thông báo rằng bạn đã được chọn để tham gia buổi phỏng vấn tại câu lạc bộ {club_name}"
+        )
+        .p(f"Dưới đây là thông tin chi tiết về buổi phỏng vấn: {value}")
+        .p(
+            f"Xin vui lòng đến đúng giờ và chuẩn bị các tài liệu, hồ sơ hoặc bất kỳ vật phẩm liên quan nào mà bạn cho là cần thiết để trình bày và thảo luận về kinh nghiệm, kỹ năng và sự quan tâm của bạn đối với câu lạc bộ."
+        )
+        .p(
+            f"Trong buổi phỏng vấn, chúng tôi sẽ tiến hành một cuộc trò chuyện cá nhân với bạn để hiểu rõ hơn về khả năng, mục tiêu và đóng góp mà bạn có thể mang đến cho câu lạc bộ. Chúng tôi cũng sẽ cung cấp thông tin chi tiết về câu lạc bộ, hoạt động và mong đợi của chúng tôi từ các ứng viên."
+        )
+        .p(
+            "Rất mong được gặp bạn trong buổi phỏng vấn và cùng trao đổi về cơ hội tham gia vào câu lạc bộ. Nếu bạn có bất kỳ câu hỏi hoặc yêu cầu nào khác, xin đừng ngần ngại liên hệ với chúng tôi qua email hoặc số điện thoại dưới đây."
+        )
+        .p("Trân trọng,")
+        .p("Ban quản trị.")
+        .make_html()
+    )
+
+
 if __name__ == "__main__":
     print(is_valid_email("hoang.tc194060@sis.hust.edu.vn"))

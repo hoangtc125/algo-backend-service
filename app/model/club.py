@@ -164,6 +164,7 @@ class Round(BaseAuditModel):
     description: str
     status: str = ProcessStatus.NOT_BEGIN
     form_question_id: Optional[str] = None
+    shift_question_id: Optional[str] = None
     kind: str = RoundType.FORM
 
 
@@ -184,7 +185,6 @@ class Participant(BaseAuditModel):
 class ParticipantResponse(Participant):
     id: str
     user: Optional[Any] = None
-    photo: Optional[Any] = None
 
 
 class FormQuestion(BaseAuditModel):

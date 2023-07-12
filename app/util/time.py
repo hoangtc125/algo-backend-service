@@ -40,3 +40,10 @@ def validate_format(time_str: str, format: str = DateTime.DATETIME_FORMAT):
 
 def get_current_date() -> int:
     return datetime_str_to_timestamp(datetime.now().strftime(DateTime.DATE_FORMAT))
+
+
+def convert_timestamp(timestamp):
+    timestamp_seconds = timestamp // 1000
+    dt = datetime.fromtimestamp(timestamp_seconds)
+    formatted_date = dt.strftime("%d-%m-%Y %H:%M")
+    return formatted_date
