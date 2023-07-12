@@ -98,6 +98,8 @@ class RecruitApi(BaseAPIModel):
     CLUSTER_GETALL = "/recruit/cluster/get-all"
     END_FORM_ROUND = "/recruit/round/form/end"
     SEND_SHFIT_MAIL = "/recruit/shift/mail"
+    SPLIT_INTERVIEW = "/recruit/interview/split"
+    SEND_MAIL_INTERVIEW = "/recruit/shift/send-mail"
 
 
 class ClusterApi(BaseAPIModel):

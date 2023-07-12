@@ -614,7 +614,7 @@ class ClubService:
             description="Vòng phỏng vấn ứng viên",
             status=ProcessStatus.NOT_BEGIN,
             kind=RoundType.INTERVIEW,
-            form_question_id=form_interview_shift_id,
+            shift_question_id=form_interview_shift_id,
         )
         groups_id = await self.round_repo.insert_many(
             [
@@ -711,11 +711,7 @@ class ClubService:
         user = photo = None
         if participant.user_id:
             user = await self.get_account({"_id": participant.user_id})
-        if participant.photo_url:
-            photo = await ImageService().get_image({"_id": participant.photo_url})
-        return ParticipantResponse(
-            id=id, user=user, photo=photo, **get_dict(participant)
-        )
+        return ParticipantResponse(id=id, user=user, **get_dict(participant))
 
     async def get_all_participant(self, **kargs):
         participants = await self.participant_repo.get_all(**kargs)
@@ -724,12 +720,8 @@ class ClubService:
             user = photo = None
             if participant.user_id:
                 user = await self.get_account({"_id": participant.user_id})
-            if participant.photo_url:
-                photo = await ImageService().get_image({"_id": participant.photo_url})
             res.append(
-                ParticipantResponse(
-                    id=doc_id, user=user, photo=photo, **get_dict(participant)
-                )
+                ParticipantResponse(id=doc_id, user=user, **get_dict(participant))
             )
         return res
 
@@ -835,6 +827,31 @@ class ClubService:
             )
             form_answer.participant_id = participant_id
         doc_id = await self.form_answer_repo.insert(form_answer)
+        return doc_id
+
+    async def create_form_interview_schedule(self, form_answer: FormAnswer):
+        event_check = await self.get_event_min({"_id": form_answer.event_id})
+        if event_check.status != ProcessStatus.ON:
+            raise CustomHTTPException("form_closed")
+        round_check = await self.get_round({"_id": form_answer.round_id})
+        if round_check.status != ProcessStatus.ON:
+            raise CustomHTTPException("form_closed")
+        if not form_answer.participant_id:
+            raise CustomHTTPException("participant_not_exist")
+        form_answer_check = await self.get_form_answer(
+            {
+                "form_id": form_answer.form_id,
+                "round_id": form_answer.round_id,
+                "participant_id": form_answer.participant_id,
+            }
+        )
+        if form_answer_check:
+            doc_id = await self.form_answer_repo.update_by_id(
+                id=form_answer_check.id,
+                obj=get_dict(form_answer, allow_none=True),
+            )
+        else:
+            doc_id = await self.form_answer_repo.insert(form_answer)
         return doc_id
 
     # ========================================================

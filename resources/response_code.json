@@ -110,7 +110,11 @@
         },
         "round_not_finished": {
             "code": 6011,
-            "message": "Vòng  loại chưa kết thúc, không thể lưu"
+            "message": "Vòng loại chưa kết thúc, không thể lưu"
+        },
+        "participant_not_exist": {
+            "code": 6012,
+            "message": "Ứng viên không tồn tại"
         }
     }
 }
