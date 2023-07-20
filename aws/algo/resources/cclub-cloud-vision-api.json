@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "cclub-383109",
+  "private_key_id": "d07a62d0fef7e29298dd1e84a30977ef481dafe0",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCoxrjPInf3MkH5\niXDfCm32yMV9vqmImAxbOZy1pmR3nINJIdCidEi3igX1gr812xHhAoEQ2ihhTl8F\njzMkHX2vuzOp07UYkDm56/WsNTw+RdVUP4Bo65oFSQKnjfmMffoGGeZZVBzQhihC\nnoqkUFh6mg38JWrSIKRh97+GnWgaSs30NxEHYsiDZrzjv7x2uaUdZnAA731i8y7i\nfEYErEL05pxnofQcYjPe5xNR5dpnCIohB1kKFoa7bocL4chMjuUnziey6TF2J7NS\nFO9YizSWk4RHLSN01Yi/+mHQ0SU9g7zC4vgx1KzkCuHIiO+oZhhNy4U+R/jCJQfj\n5PZphLTHAgMBAAECggEAAiuAtGEPRWVaOP9N+gAkIJhXBnvaECbsTPJbraMBbaxC\n39pu2HfbeEihzpTeXBUZ9yU7sl/4eIlnNvOu+grkn8rHXXdnjHSzDIBLibarGwRC\nbuSpUPzRrFNSlNCCSEHvLsuy2d+QxnmP5CaUeVi/50U6lgBUWqlCxv1GQB1r+Wwk\npQJr98U6LETDPER0bHdX6MKFIZqj5utNJyene6QVkyvMK+uIsvKrfGKlSVqdsLas\nEf9Xa5HzSIc6Nn8BNJJSQcpzANSKCsztOYyA6R0hSM/79uI+d1lFjgLg53E9sBfy\ntHSegliTlp9pGO/tyi9cLezsXU3C1jqNDuK6kGvRsQKBgQDQihrAPj8XS+hMnp2d\nKGSX0WvcymE/BlqIWWc9iZnIEqdjqlBOIVC14J8abjFWs3w5fFqUPttUkecuY2oy\nmbmv8E4Y8AX/HNjLoBrYV1RiU24lA1blbbravyu447qxzzX9QulwpDU0EUKOSK0M\nEofgj9xJTQ72Fd8UlhHZmhkHaQKBgQDPL/BjzqujoyCGrtX0+i8FXbaNV48vACw5\noPXZeySVPRkUPsaNluCgnLbn77SP0JrXs39u5mbehtQ7Jl2L+8W0TTi44I7VdWQL\nGQ4QMaGGJGDeDzZi+YMKlS7/PEfAf/mmld9462q/nTBRcweZyHBtbnv/aa4fDY+C\ndBwyZZMErwKBgD8/s89c0bvaHPGoJfu1dZUKQmGrzATWg3zZSNPEOS0SY0x6KnMX\n7afMIdVdWH+IXoP88GgIDHPA8NID+wCv2T7Abp9npRn0ANj5jUrSadiMn1qAgcmC\nF2sjEjq4bzZgt2pB8hVk6HILThljd4Cy2h1E5LYitgfzKD7RKUbLUw4JAoGAUUUB\nq3TG+OIlAQ+Vl4mHZjhzQhAFdy8/Kb/Mj+lw2SVlL/7LzYBQTlAKowHwtrTh+BhN\ntUelNEZ4+1a6PQ2eaHId/M8A2BQ7EOtcC9gb/s1IPfKDp+EtmLoZ/D49+vF4EPMa\n/IiDj/PtnxVa9uSbzSEYfICMr1uXXlmDMfWL7LsCgYEAgB52IdNS9T2QD61r905+\nvn5+07RP6X26hm8aTQ09TsXbhVUypVVLxonxR+tU8tYN+wJpQ3ZRCjlBoMeLdbel\nxDz78NBwPrCtGwdSBPYSlP2Qa+6QdFmhrbXCQNv5wMXPSxIEQ9bB16IwDLciB1ux\nuxLl2K6fT+2fjQ3GjGtp39g=\n-----END PRIVATE KEY-----\n",
+  "client_email": "algo-vision-api@cclub-383109.iam.gserviceaccount.com",
+  "client_id": "101514609707482690128",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/algo-vision-api%40cclub-383109.iam.gserviceaccount.com"
+}

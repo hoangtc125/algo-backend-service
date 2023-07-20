@@ -72,3 +72,6 @@ server {
         add_header Content-Type application/x-javascript;
     }
 }
+
+mv algo-backend-service-master algo-backend-service-master-v
+rm -R master.zip 

@@ -1,7 +1,7 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
 .venv
-.env
+# .env
 mongodb
 docker/rabbitmq
 docker/grafana
@@ -9,8 +9,8 @@ docker/log
 log
 .vscode
 .metals
-algo-firebase.json
-cclub-cloud-vision-api.json
-*.pem
+# algo-firebase.json
+# cclub-cloud-vision-api.json
+# *.pem
 .VSCodeCounter
-conghoangtran.id.vn
+# conghoangtran.id.vn
